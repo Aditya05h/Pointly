@@ -1,0 +1,143 @@
+.about__top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: start;
+  margin-bottom: 72px;
+}
+
+.about__heading {
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.about__body {
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.about__body:last-child { margin-bottom: 0; }
+
+/* Values */
+.about__values {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  align-self: start;
+}
+
+.about__value {
+  background: var(--surface);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: background var(--t);
+}
+
+.about__value:hover { background: var(--surface-2); }
+
+.about__value-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about__value-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: -0.01em;
+}
+
+.about__value-desc {
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* Stack */
+.about__stack-section {
+  margin-bottom: 40px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+}
+
+.about__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.about__stack-item {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 6px 14px;
+  transition: border-color var(--t), color var(--t);
+}
+
+.about__stack-item:hover {
+  border-color: var(--border-mid);
+  color: var(--text-1);
+}
+
+/* Team */
+.about__team {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.about__member {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.about__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.about__avatar--dim {
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.about__member-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 3px;
+}
+
+.about__member-role { font-size: 12.5px; }
+
+@media (max-width: 860px) {
+  .about__top { grid-template-columns: 1fr; gap: 40px; }
+  .about__values { max-width: 500px; }
+}
+
+@media (max-width: 500px) {
+  .about__values { grid-template-columns: 1fr; }
+}

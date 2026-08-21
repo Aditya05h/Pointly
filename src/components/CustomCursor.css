@@ -1,0 +1,199 @@
+/* ============================================
+   CUSTOM ROBOTIC CURSOR
+   - Hide native cursor globally
+   - Outer ring: lerped (lags behind) with tick marks
+   - Inner dot: snappy (follows exactly)
+   - Click ripple, hover morph
+============================================ */
+
+/* Hide the native cursor everywhere */
+*,
+*::before,
+*::after {
+  cursor: none !important;
+}
+
+/* ── Shared positioning base ── */
+.cur-ring,
+.cur-dot,
+.cur-ripple {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* translate() is set by JS — subtract half size to centre */
+  pointer-events: none;
+  z-index: 99999;
+  will-change: transform;
+}
+
+/* ============================================
+   OUTER RING
+============================================ */
+.cur-ring {
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
+  margin-top:  -17px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  transition:
+    width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    margin 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.25s,
+    opacity 0.25s;
+}
+
+/* Tick marks — the robotic HUD detail */
+.cur-tick {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Top / Bottom ticks */
+.cur-tick--t,
+.cur-tick--b {
+  width: 1.5px;
+  height: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.cur-tick--t { top: -3px; }
+.cur-tick--b { bottom: -3px; }
+
+/* Left / Right ticks */
+.cur-tick--l,
+.cur-tick--r {
+  height: 1.5px;
+  width: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.cur-tick--l { left: -3px; }
+.cur-tick--r { right: -3px; }
+
+/* ── Hover state — ring expands ── */
+.cur-ring--hover {
+  width: 52px;
+  height: 52px;
+  margin-left: -26px;
+  margin-top:  -26px;
+  border-color: rgba(79, 127, 255, 0.7);
+}
+
+.cur-ring--hover .cur-tick {
+  background: rgba(79, 127, 255, 0.9);
+}
+
+/* ── Click state — ring flashes ── */
+.cur-ring--click {
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  margin-top:  -12px;
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Hidden ── */
+.cur-ring--hidden {
+  opacity: 0;
+}
+
+/* ============================================
+   INNER DOT
+============================================ */
+.cur-dot {
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  margin-top:  -2.5px;
+  background: #fff;
+  border-radius: 50%;
+  transition:
+    width 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    margin 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.18s,
+    opacity 0.18s;
+}
+
+/* ── Hover: dot fills to accent ── */
+.cur-dot--hover {
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  margin-top:  -4px;
+  background: #4F7FFF;
+}
+
+/* ── Click: dot shrinks ── */
+.cur-dot--click {
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  margin-top:  -1.5px;
+}
+
+/* ── Hidden ── */
+.cur-dot--hidden {
+  opacity: 0;
+}
+
+/* ============================================
+   CLICK RIPPLE
+============================================ */
+.cur-ripple {
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top:  -5px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cur-ripple--fire {
+  animation: rippleFire 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* JS sets translate via transform — keyframes only scale on top of it */
+@keyframes rippleFire {
+  0%   { scale: 1;   opacity: 0.75; }
+  100% { scale: 4.5; opacity: 0; }
+}
+
+/* ============================================
+   ROTATE the ring slowly (subtle robotic feel)
+============================================ */
+.cur-ring::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-top-color: rgba(79, 127, 255, 0.5);
+  animation: ringRotate 3s linear infinite;
+}
+
+@keyframes ringRotate {
+  to { transform: rotate(360deg); }
+}
+
+/* On hover, spin faster */
+.cur-ring--hover::after {
+  border-top-color: rgba(79, 127, 255, 0.9);
+  animation-duration: 1s;
+}
+
+/* ============================================
+   TOUCH / MOBILE — restore native cursor
+============================================ */
+@media (hover: none) and (pointer: coarse) {
+  * { cursor: auto !important; }
+  .cur-ring,
+  .cur-dot,
+  .cur-ripple {
+    display: none !important;
+  }
+}

@@ -1,0 +1,113 @@
+.hiw-section {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.hiw__header {
+  margin-bottom: 56px;
+}
+
+.hiw__header .heading-lg {
+  margin-top: 8px;
+}
+
+/* Steps */
+.hiw__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 56px;
+  position: relative;
+}
+
+.hiw__step {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.hiw__step:last-child { border-bottom: none; }
+
+.hiw__num {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  padding-top: 3px;
+}
+
+.hiw__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.hiw__title {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.hiw__desc {
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  max-width: 560px;
+}
+
+.hiw__note {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.hiw__connector {
+  display: none; /* Steps are separated by border-bottom */
+}
+
+/* System requirements */
+.hiw__reqs {
+  padding: 28px 32px;
+}
+
+.hiw__reqs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+}
+
+.hiw__req {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  padding-right: 24px;
+}
+
+.hiw__req:nth-child(even) { padding-right: 0; padding-left: 24px; border-left: 1px solid var(--border); }
+.hiw__req:nth-last-child(-n+2) { border-bottom: none; }
+
+.hiw__req-k {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hiw__req-v {
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+@media (max-width: 600px) {
+  .hiw__reqs-grid { grid-template-columns: 1fr; }
+  .hiw__req:nth-child(even) { padding-left: 0; border-left: none; }
+  .hiw__req { border-bottom: 1px solid var(--border); }
+  .hiw__req:last-child { border-bottom: none; }
+}

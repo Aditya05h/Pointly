@@ -1,0 +1,83 @@
+.pcanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Dot grid pattern */
+.pcanvas__dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(0, 198, 255, 0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Radial glows */
+.pcanvas__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.pcanvas__glow--1 {
+  width: 600px; height: 600px;
+  top: -200px; left: -200px;
+  background: radial-gradient(circle, rgba(0,198,255,0.07), transparent 70%);
+}
+
+.pcanvas__glow--2 {
+  width: 500px; height: 500px;
+  bottom: -100px; right: -100px;
+  background: radial-gradient(circle, rgba(255,184,0,0.05), transparent 70%);
+}
+
+/* Particles */
+.pcanvas__particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: particleFloat linear infinite;
+}
+
+.pcanvas__particle--blue {
+  background: var(--accent-blue);
+  box-shadow: 0 0 4px var(--accent-blue), 0 0 10px rgba(0,198,255,0.4);
+}
+.pcanvas__particle--cyan {
+  background: var(--accent-cyan);
+  box-shadow: 0 0 4px var(--accent-cyan), 0 0 10px rgba(0,255,209,0.4);
+}
+.pcanvas__particle--gold {
+  background: var(--accent-gold);
+  box-shadow: 0 0 4px var(--accent-gold), 0 0 10px rgba(255,184,0,0.4);
+}
+
+/* Scanning beam */
+.pcanvas__scan {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(0,198,255,0.10) 20%,
+    rgba(0,198,255,0.25) 50%,
+    rgba(0,198,255,0.10) 80%,
+    transparent
+  );
+  animation: scanLine 10s linear infinite;
+}
+
+/* Corner HUD brackets */
+.pcanvas__corner {
+  position: fixed;
+  width: 36px;
+  height: 36px;
+  opacity: 0.4;
+}
+
+.pcanvas__corner--tl { top: 72px; left: 16px; border-top: 2px solid var(--accent-blue); border-left: 2px solid var(--accent-blue); }
+.pcanvas__corner--tr { top: 72px; right: 16px; border-top: 2px solid var(--accent-blue); border-right: 2px solid var(--accent-blue); }
+.pcanvas__corner--bl { bottom: 16px; left: 16px; border-bottom: 2px solid rgba(255,184,0,0.6); border-left: 2px solid rgba(255,184,0,0.6); }
+.pcanvas__corner--br { bottom: 16px; right: 16px; border-bottom: 2px solid rgba(255,184,0,0.6); border-right: 2px solid rgba(255,184,0,0.6); }
