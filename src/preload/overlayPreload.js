@@ -13,6 +13,16 @@ contextBridge.exposeInMainWorld('pointlyCompanion', {
   copyToClipboard: (text) => ipcRenderer.send('clipboard:write', text),
   openFullChat: () => ipcRenderer.send('companion:open-chat'),
   setIgnoreMouseEvents: (ignore, options) => ipcRenderer.send('overlay:set-ignore-mouse', { ignore, options }),
+  onCursorPos: (callback) => {
+    const handler = (_, pos) => callback(pos);
+    ipcRenderer.on('cursor:pos', handler);
+    return () => ipcRenderer.removeListener('cursor:pos', handler);
+  },
+  onGlideTo: (callback) => {
+    const handler = (_, data) => callback(data);
+    ipcRenderer.on('companion:glide-to', handler);
+    return () => ipcRenderer.removeListener('companion:glide-to', handler);
+  },
   onVoiceToggle: (callback) => {
     const handler = (_, data) => callback(data);
     ipcRenderer.on('voice:toggle', handler);

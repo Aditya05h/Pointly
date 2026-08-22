@@ -18,27 +18,33 @@
 }
 
 html, body {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   background: transparent;
   font-family: 'Manrope', -apple-system, sans-serif;
   user-select: none;
-}
-
-.clicky-wrapper {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 4px;
-  width: 340px;
   pointer-events: none;
 }
 
-/* 26px Dark Red Cursor Buddy */
+/* Transform-driven, GPU-accelerated Cursor Companion Wrapper */
+.clicky-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+  will-change: transform;
+  transform: translate3d(100px, 100px, 0);
+  z-index: 1000;
+}
+
+/* 26px Dark Red Bouncy Cursor Buddy */
 .buddy-container {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 30px;
   height: 30px;
   display: grid;
@@ -53,21 +59,47 @@ html, body {
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, var(--dark-red-glow) 0%, var(--dark-red-main) 55%, var(--dark-red-deep) 100%);
   border: 1.5px solid var(--ruby-highlight);
-  box-shadow: 0 0 12px rgba(184, 20, 50, 0.5), 0 2px 8px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 12px rgba(184, 20, 50, 0.55), 0 2px 8px rgba(0, 0, 0, 0.6);
   cursor: pointer;
   z-index: 10;
   display: grid;
   place-items: center;
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+  animation: buddy-float 2.4s infinite ease-in-out;
+  transition: box-shadow 0.2s ease;
+  transform-origin: center bottom;
+}
+
+/* Playful, Organic Breathing Bounce Animation */
+@keyframes buddy-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1, 1);
+  }
+  28% {
+    transform: translateY(-4px) scale(0.96, 1.05); /* Stretch up */
+  }
+  62% {
+    transform: translateY(3px) scale(1.06, 0.94); /* Squash on low bounce */
+  }
+  80% {
+    transform: translateY(-1px) scale(0.99, 1.01);
+  }
 }
 
 .buddy-orb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 20px rgba(255, 77, 109, 0.8), 0 4px 12px rgba(0, 0, 0, 0.7);
+  animation: buddy-jiggle 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  box-shadow: 0 0 22px rgba(255, 77, 109, 0.9), 0 4px 12px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes buddy-jiggle {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.28, 0.82) rotate(-5deg); }
+  50% { transform: scale(0.9, 1.2) rotate(5deg); }
+  75% { transform: scale(1.16, 0.94) rotate(-2deg); }
+  100% { transform: scale(1.15, 1.15) rotate(0deg); }
 }
 
 .buddy-orb:active {
-  transform: scale(0.95);
+  transform: scale(0.9, 1.15);
 }
 
 /* Expressive Buddy Eyes */
@@ -75,6 +107,7 @@ html, body {
   display: flex;
   gap: 4px;
   align-items: center;
+  transition: transform 0.15s ease-out;
 }
 
 .buddy-eye {
@@ -84,12 +117,13 @@ html, body {
   border-radius: 2px;
   box-shadow: 0 0 4px #ffffff;
   transition: all 0.15s ease;
-  animation: blink 4.5s infinite;
+  animation: blink 4.2s infinite;
 }
 
 @keyframes blink {
-  0%, 96%, 100% { transform: scaleY(1); }
-  98% { transform: scaleY(0.1); }
+  0%, 94%, 100% { transform: scaleY(1) scaleX(1); }
+  96% { transform: scaleY(0.15) scaleX(1.3); } /* Squishy blink */
+  98% { transform: scaleY(1.1) scaleX(0.95); }
 }
 
 /* Glowing Pulsing Aura around Buddy */
@@ -106,71 +140,84 @@ html, body {
   z-index: 1;
 }
 
-/* State: Listening */
+/* State: Listening Bounce */
 .clicky-wrapper.listening .buddy-orb {
   border-color: #ff0055;
-  box-shadow: 0 0 24px rgba(255, 0, 85, 0.9);
-  animation: buddy-listen-bounce 0.6s infinite alternate ease-in-out;
+  box-shadow: 0 0 26px rgba(255, 0, 85, 0.95);
+  animation: buddy-listen-bounce 0.5s infinite alternate cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .clicky-wrapper.listening .buddy-aura {
   opacity: 1;
-  animation: aura-expand 1s infinite ease-out;
+  animation: aura-expand 0.9s infinite ease-out;
 }
 
 @keyframes aura-expand {
-  0% { transform: scale(0.9); opacity: 0.9; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0% { transform: scale(0.9); opacity: 0.95; }
+  100% { transform: scale(2.4); opacity: 0; }
 }
 
 @keyframes buddy-listen-bounce {
-  from { transform: scale(1); }
-  to { transform: scale(1.18); }
+  0% { transform: translateY(2px) scale(1.12, 0.88); }
+  100% { transform: translateY(-7px) scale(0.88, 1.16); }
 }
 
-/* State: Thinking */
+/* State: Thinking Bouncy Spin */
 .clicky-wrapper.thinking .buddy-orb {
   animation: buddy-think 1s linear infinite;
-  box-shadow: 0 0 20px var(--ruby-highlight);
+  box-shadow: 0 0 22px var(--ruby-highlight);
 }
 
 @keyframes buddy-think {
-  0% { transform: rotate(0deg) scale(1.05); }
-  50% { transform: rotate(180deg) scale(1.15); }
-  100% { transform: rotate(360deg) scale(1.05); }
+  0% { transform: rotate(0deg) scale(1.05, 0.95); }
+  50% { transform: rotate(180deg) scale(0.95, 1.15); }
+  100% { transform: rotate(360deg) scale(1.05, 0.95); }
 }
 
-/* State: Speaking */
+/* State: Speaking Bouncy Pulse */
 .clicky-wrapper.speaking .buddy-orb {
   border-color: #ff85a1;
-  box-shadow: 0 0 28px rgba(255, 133, 161, 0.85);
-  animation: buddy-talk 0.35s infinite alternate ease-in-out;
+  box-shadow: 0 0 28px rgba(255, 133, 161, 0.9);
+  animation: buddy-talk 0.38s infinite alternate cubic-bezier(0.42, 0, 0.58, 1);
 }
 
 @keyframes buddy-talk {
-  from { transform: scale(1); }
-  to { transform: scale(1.2); }
+  0% { transform: translateY(1px) scale(1.08, 0.92); }
+  100% { transform: translateY(-5px) scale(0.92, 1.12); }
 }
 
 /* Floating Transient Speech Bubble */
 .speech-bubble {
-  position: relative;
+  position: absolute;
+  top: 34px;
+  left: 0;
   background: var(--bubble-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--bubble-border);
   border-radius: 12px;
   padding: 10px 14px;
-  max-width: 320px;
+  width: 320px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   opacity: 0;
-  transform: translateY(-4px) scale(0.96);
+  transform: translateY(-4px) scale(0.94);
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Edge Adaptability: Flips bubble when near edges */
+.clicky-wrapper.flip-left .speech-bubble {
+  left: auto;
+  right: 0;
+}
+
+.clicky-wrapper.flip-up .speech-bubble {
+  top: auto;
+  bottom: 34px;
 }
 
 .speech-bubble.visible {
@@ -184,7 +231,7 @@ html, body {
   line-height: 1.45;
   color: var(--text-white);
   word-break: break-word;
-  max-height: 120px;
+  max-height: 140px;
   overflow-y: auto;
 }
 
@@ -248,6 +295,9 @@ html, body {
 
 /* Minimal Expandable Typing Capsule */
 .type-capsule {
+  position: absolute;
+  top: 34px;
+  left: 0;
   display: none;
   align-items: center;
   gap: 4px;
@@ -257,9 +307,20 @@ html, body {
   border: 1px solid var(--bubble-border);
   border-radius: 20px;
   padding: 3px 6px 3px 12px;
-  width: 270px;
+  width: 280px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   pointer-events: auto;
+  z-index: 25;
+}
+
+.clicky-wrapper.flip-left .type-capsule {
+  left: auto;
+  right: 0;
+}
+
+.clicky-wrapper.flip-up .type-capsule {
+  top: auto;
+  bottom: 34px;
 }
 
 .type-capsule.visible {

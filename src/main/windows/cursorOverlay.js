@@ -2,20 +2,26 @@ const { BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('node:path');
 
 let companionWindow = null;
-let isGliding = false;
-let isTyping = false;
 let followInterval = null;
+let isTyping = false;
 
 function createOverlayWindow() {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
-  const cursorPosition = screen.getCursorScreenPoint();
+  const displays = screen.getAllDisplays();
+  let minX = 0, minY = 0, maxX = 0, maxY = 0;
+  displays.forEach((d) => {
+    minX = Math.min(minX, d.bounds.x);
+    minY = Math.min(minY, d.bounds.y);
+    maxX = Math.max(maxX, d.bounds.x + d.bounds.width);
+    maxY = Math.max(maxY, d.bounds.y + d.bounds.height);
+  });
+  const width = Math.max(1920, maxX - minX);
+  const height = Math.max(1080, maxY - minY);
 
   const window = new BrowserWindow({
-    width: 400,
-    height: 280,
-    x: Math.min(cursorPosition.x + 14, screenWidth - 410),
-    y: Math.min(cursorPosition.y + 14, screenHeight - 290),
+    x: minX,
+    y: minY,
+    width,
+    height,
     frame: false,
     transparent: true,
     resizable: false,
@@ -28,31 +34,31 @@ function createOverlayWindow() {
     }
   });
 
+  window.setAlwaysOnTop(true, 'screen-saver');
+  window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   window.setIgnoreMouseEvents(true, { forward: true });
   window.loadFile(path.join(__dirname, '../../renderer/overlay/cursor.html'));
 
-  let lastPosition = cursorPosition;
+  let lastX = -1;
+  let lastY = -1;
 
+  // High-frequency 120Hz native cursor tracking loop
   followInterval = setInterval(() => {
     if (window.isDestroyed()) {
       clearInterval(followInterval);
       return;
     }
 
-    if (isGliding || isTyping) return; // Do not move when typing or gliding
+    const pt = screen.getCursorScreenPoint();
+    const relX = pt.x - minX;
+    const relY = pt.y - minY;
 
-    const nextPosition = screen.getCursorScreenPoint();
-    if (nextPosition.x === lastPosition.x && nextPosition.y === lastPosition.y) return;
-
-    const currentDisplay = screen.getDisplayNearestPoint(nextPosition);
-    const bounds = currentDisplay.workArea;
-
-    const targetX = Math.min(nextPosition.x + 14, bounds.x + bounds.width - 410);
-    const targetY = Math.min(nextPosition.y + 14, bounds.y + bounds.height - 290);
-
-    window.setPosition(Math.max(bounds.x + 4, targetX), Math.max(bounds.y + 4, targetY), false);
-    lastPosition = nextPosition;
-  }, 16);
+    if (relX !== lastX || relY !== lastY) {
+      window.webContents.send('cursor:pos', { x: relX, y: relY });
+      lastX = relX;
+      lastY = relY;
+    }
+  }, 8);
 
   window.on('closed', () => {
     clearInterval(followInterval);
@@ -64,7 +70,7 @@ function createOverlayWindow() {
 }
 
 /**
- * Freeze companion movement and focus window when typing bar is open.
+ * Handle typing mode focus state.
  */
 function setTypingMode(active) {
   isTyping = Boolean(active);
@@ -80,39 +86,11 @@ function setTypingMode(active) {
 }
 
 /**
- * Smoothly glide companion window to target coordinates on desktop.
+ * Smoothly glide companion to target coordinates on desktop.
  */
 function glideCompanionTo(targetX, targetY, durationMs = 800) {
   if (!companionWindow || companionWindow.isDestroyed()) return;
-
-  isGliding = true;
-  const [startX, startY] = companionWindow.getPosition();
-  const startTime = Date.now();
-
-  const glideTimer = setInterval(() => {
-    if (!companionWindow || companionWindow.isDestroyed()) {
-      clearInterval(glideTimer);
-      isGliding = false;
-      return;
-    }
-
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / durationMs, 1);
-    const ease = 1 - Math.pow(1 - progress, 3); // Ease out cubic
-
-    const currentX = Math.round(startX + (targetX - startX) * ease);
-    const currentY = Math.round(startY + (targetY - startY) * ease);
-
-    companionWindow.setPosition(currentX, currentY, false);
-
-    if (progress >= 1) {
-      clearInterval(glideTimer);
-      // Hold position on target for 4 seconds before resuming follow
-      setTimeout(() => {
-        isGliding = false;
-      }, 4000);
-    }
-  }, 16);
+  companionWindow.webContents.send('companion:glide-to', { targetX, targetY, durationMs });
 }
 
 function getCompanionWindow() {

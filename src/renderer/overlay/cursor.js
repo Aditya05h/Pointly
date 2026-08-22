@@ -14,6 +14,7 @@ const beaconTag = document.getElementById('beacon-tag');
 
 let isRecording = false;
 let isTypingActive = false;
+let isGliding = false;
 let audioContext = null;
 let mediaStream = null;
 let scriptProcessor = null;
@@ -27,6 +28,121 @@ let bubbleDismissTimer = null;
 let currentWorkflow = null;
 let currentStepIndex = 0;
 let currentDraftText = '';
+
+// Position Tracking (Hardware Native Synchronized with Constant Offset & Bouncy Inertia)
+let targetCursorX = window.innerWidth ? Math.round(window.innerWidth / 2) : 500;
+let targetCursorY = window.innerHeight ? Math.round(window.innerHeight / 2) : 500;
+let lastTargetX = targetCursorX;
+let lastTargetY = targetCursorY;
+let velocityX = 0;
+let velocityY = 0;
+let tiltAngle = 0;
+let currentFollowX = targetCursorX + 12;
+let currentFollowY = targetCursorY + 12;
+
+// High-speed native cursor coordinate listener from Electron
+if (window.pointlyCompanion?.onCursorPos) {
+  window.pointlyCompanion.onCursorPos((pos) => {
+    if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
+      targetCursorX = pos.x;
+      targetCursorY = pos.y;
+    }
+  });
+}
+
+// Fallback window mousemove listener
+window.addEventListener('mousemove', (e) => {
+  if (e.clientX && e.clientY) {
+    targetCursorX = e.clientX;
+    targetCursorY = e.clientY;
+  }
+});
+
+// Hardware-accelerated GPU render loop with bouncy inertia physics
+function animLoop() {
+  if (!isGliding && !isTypingActive) {
+    const dx = targetCursorX - lastTargetX;
+    const dy = targetCursorY - lastTargetY;
+    lastTargetX = targetCursorX;
+    lastTargetY = targetCursorY;
+
+    // Velocity & inertia damping
+    velocityX += (dx - velocityX) * 0.3;
+    velocityY += (dy - velocityY) * 0.3;
+
+    // Subtle playful dynamic tilt into motion direction (-14deg to +14deg)
+    const targetTilt = Math.max(-14, Math.min(14, velocityX * 0.4));
+    tiltAngle += (targetTilt - tiltAngle) * 0.22;
+
+    currentFollowX = targetCursorX + 12;
+    currentFollowY = targetCursorY + 12;
+
+    const screenW = window.innerWidth || 1920;
+    const screenH = window.innerHeight || 1080;
+
+    const isNearRightEdge = targetCursorX > screenW - 350;
+    const isNearBottomEdge = targetCursorY > screenH - 220;
+
+    if (isNearRightEdge) {
+      wrapper.classList.add('flip-left');
+    } else {
+      wrapper.classList.remove('flip-left');
+    }
+
+    if (isNearBottomEdge) {
+      wrapper.classList.add('flip-up');
+    } else {
+      wrapper.classList.remove('flip-up');
+    }
+
+    wrapper.style.transform = `translate3d(${currentFollowX}px, ${currentFollowY}px, 0)`;
+
+    // Apply playful dynamic tilt to buddy orb when moving
+    if (buddyOrb) {
+      if (Math.abs(tiltAngle) > 0.2) {
+        buddyOrb.style.transform = `rotate(${tiltAngle.toFixed(1)}deg)`;
+      } else {
+        buddyOrb.style.transform = '';
+      }
+    }
+  }
+  requestAnimationFrame(animLoop);
+}
+requestAnimationFrame(animLoop);
+
+// Smooth Gliding Animation Across Full Screen
+function glideTo(targetX, targetY, durationMs = 700) {
+  isGliding = true;
+  const startX = currentFollowX;
+  const startY = currentFollowY;
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / durationMs, 1);
+    const ease = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+
+    currentFollowX = Math.round(startX + (targetX - startX) * ease);
+    currentFollowY = Math.round(startY + (targetY - startY) * ease);
+
+    wrapper.style.transform = `translate3d(${currentFollowX}px, ${currentFollowY}px, 0)`;
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      setTimeout(() => {
+        isGliding = false;
+      }, 4000);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+if (window.pointlyCompanion?.onGlideTo) {
+  window.pointlyCompanion.onGlideTo(({ targetX, targetY, durationMs }) => {
+    glideTo(targetX, targetY, durationMs || 700);
+  });
+}
 
 // Initialize user voice preferences
 if (window.pointlyCompanion?.getSettings) {
@@ -54,7 +170,7 @@ typeCapsule.addEventListener('mouseenter', () => {
 
 typeCapsule.addEventListener('mouseleave', () => {
   if (document.activeElement === capsuleInput || isRecording) return;
-  if (!isTypingActive) {
+  if (!isTypingActive && !currentWorkflow) {
     window.pointlyCompanion?.setIgnoreMouseEvents(true, { forward: true });
   }
 });
@@ -370,7 +486,7 @@ async function playWorkflowStep(stepIndex) {
   if (!currentWorkflow || !currentWorkflow.steps || stepIndex >= currentWorkflow.steps.length) {
     if (workflowControls) workflowControls.classList.remove('active');
     currentWorkflow = null;
-    showSpeechBubble('Workflow complete! Your draft is ready in Word.', false, 4000);
+    showSpeechBubble('Workflow complete! Your draft is ready.', false, 4000);
     return;
   }
 
@@ -386,7 +502,7 @@ async function playWorkflowStep(stepIndex) {
 
   // Glide companion to button coordinates on screen
   if (step.targetX && step.targetY) {
-    window.pointlyCompanion.glideTo(step.targetX, step.targetY);
+    glideTo(step.targetX, step.targetY);
   }
 
   // Speak step guidance
@@ -395,7 +511,7 @@ async function playWorkflowStep(stepIndex) {
   }
 }
 
-// Execute Task (Guided Workflows, Desktop search, OS controls, or AI)
+// Execute Task (Guided Workflows, Desktop search, OS controls, Browser, or AI)
 async function executeTask(commandText, source = 'text') {
   if (!commandText || !commandText.trim()) return;
 
@@ -408,7 +524,7 @@ async function executeTask(commandText, source = 'text') {
       language: userLang
     });
 
-    // 1. Guided Multi-Step Workflow (e.g. Draft mail in Word)
+    // 1. Guided Multi-Step Workflow (e.g. Draft mail in Word or Web Search)
     if (result.type === 'guided_workflow' && result.steps) {
       currentWorkflow = result;
       currentDraftText = result.draftContent || '';
@@ -422,7 +538,7 @@ async function executeTask(commandText, source = 'text') {
       showSpeechBubble(result.message, false, 0);
 
       if (result.targetX && result.targetY) {
-        window.pointlyCompanion.glideTo(result.targetX, result.targetY);
+        glideTo(result.targetX, result.targetY);
       }
 
       if (result.spokenText) {
@@ -439,7 +555,7 @@ async function executeTask(commandText, source = 'text') {
       showSpeechBubble(result.message, false, 0);
 
       if (result.targetX && result.targetY) {
-        window.pointlyCompanion.glideTo(result.targetX, result.targetY);
+        glideTo(result.targetX, result.targetY);
       }
 
       if (result.spokenText) {
@@ -456,7 +572,7 @@ async function executeTask(commandText, source = 'text') {
       showSpeechBubble(result.message, false, 0);
 
       if (result.targetX && result.targetY) {
-        window.pointlyCompanion.glideTo(result.targetX, result.targetY);
+        glideTo(result.targetX, result.targetY);
       }
 
       if (result.spokenText) {

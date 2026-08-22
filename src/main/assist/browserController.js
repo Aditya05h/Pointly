@@ -27,10 +27,16 @@ function runPowerShell(script) {
  * Common quick website URLs.
  */
 const QUICK_SITES = {
+  canva: 'https://canva.com',
+  figma: 'https://figma.com',
+  notion: 'https://notion.so',
   youtube: 'https://youtube.com',
   github: 'https://github.com',
   google: 'https://google.com',
   gmail: 'https://mail.google.com',
+  docs: 'https://docs.google.com',
+  sheets: 'https://sheets.google.com',
+  drive: 'https://drive.google.com',
   wikipedia: 'https://wikipedia.org',
   reddit: 'https://reddit.com',
   linkedin: 'https://linkedin.com',
@@ -42,7 +48,8 @@ const QUICK_SITES = {
   devpost: 'https://devpost.com',
   hackathon: 'https://devpost.com',
   amazon: 'https://amazon.com',
-  netflix: 'https://netflix.com'
+  netflix: 'https://netflix.com',
+  spotify: 'https://open.spotify.com'
 };
 
 /**
@@ -52,7 +59,6 @@ function openInChrome(url) {
   return new Promise((resolve) => {
     exec(`start chrome "${url}"`, (err) => {
       if (err) {
-        // Fallback to system default browser
         exec(`start "" "${url}"`, () => resolve({ success: true, fallback: true }));
       } else {
         resolve({ success: true, fallback: false });
@@ -78,11 +84,11 @@ Write-Host "OK";
  */
 function isBrowserNavigation(userQuery) {
   const q = (userQuery || '').toLowerCase();
-  const hasBrowserWords = /chrome|browser|webpage|website|url|web|tab|page\b/i.test(q);
+  const hasBrowserWords = /chrome|google chrome|browser|webpage|website|url|web|tab|page\b/i.test(q);
   const hasActions = /search|look up|open|navigate|go to|scroll|refresh|reload|address bar|omnibox|new tab|close tab/i.test(q);
 
   if (hasBrowserWords && hasActions) return true;
-  if (/^open\s+(youtube|github|google|gmail|wikipedia|reddit|linkedin|twitter|x|devpost|netflix|amazon)\b/i.test(q)) return true;
+  if (/^open\s+(canva|figma|notion|youtube|github|google|gmail|docs|sheets|drive|wikipedia|reddit|linkedin|twitter|x|devpost|netflix|amazon|spotify)\b/i.test(q)) return true;
   if (/^search\s+(for\s+)?/i.test(q)) return true;
   if (/scroll\s+(down|up|page)/i.test(q)) return true;
   if (/where is (the )?(address bar|search bar|new tab|back button)/i.test(q)) return true;
@@ -185,7 +191,7 @@ async function handleBrowserCommand(userQuery) {
     };
   }
 
-  // 4. Quick Direct Website Launching (YouTube, GitHub, Wikipedia, etc.)
+  // 4. Quick Direct Website Launching (Canva, Figma, Notion, YouTube, GitHub, etc.)
   for (const [siteKey, siteUrl] of Object.entries(QUICK_SITES)) {
     const siteRegex = new RegExp(`\\b(open|go to|launch|navigate to)\\s+(${siteKey})\\b`, 'i');
     if (siteRegex.test(query) || query === `open ${siteKey}` || query === siteKey) {
@@ -196,13 +202,13 @@ async function handleBrowserCommand(userQuery) {
         found: true,
         targetX: coords.addressBar.x,
         targetY: coords.addressBar.y,
-        message: `Navigated to ${siteKey} in Chrome (${siteUrl}).`,
-        spokenText: `Opening ${siteKey} in Chrome for you now.`
+        message: `Navigated to ${siteKey} in Google Chrome (${siteUrl}).`,
+        spokenText: `Opening ${siteKey} in Google Chrome for you now.`
       };
     }
   }
 
-  // 5. Open Direct URL (e.g. "navigate to https://example.com" or "open example.com in chrome")
+  // 5. Open Direct URL (e.g. "navigate to https://example.com" or "open canva.com in chrome")
   const urlMatch = query.match(/(?:navigate to|open|go to)\s+(https?:\/\/[^\s]+|[a-zA-Z0-9_\-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/i);
   if (urlMatch && urlMatch[1] && !urlMatch[1].endsWith('.txt') && !urlMatch[1].endsWith('.pdf')) {
     let targetUrl = urlMatch[1];
@@ -221,7 +227,26 @@ async function handleBrowserCommand(userQuery) {
     };
   }
 
-  // 6. Guided Web Search & Exploration (e.g. "Search for latest AI news on Chrome")
+  // 6. Generic "open [name] in chrome / google chrome" fallback
+  const genericOpenMatch = query.match(/(?:open|go to|launch|navigate to)\s+([a-zA-Z0-9_\-\s]+)\s+(?:in|on)\s+(?:chrome|google chrome|browser)/i);
+  if (genericOpenMatch && genericOpenMatch[1]) {
+    const targetName = genericOpenMatch[1].trim();
+    if (targetName && !targetName.includes('antigravity') && !targetName.includes('notepad')) {
+      const siteUrl = `https://www.${targetName.replace(/\s+/g, '')}.com`;
+      await openInChrome(siteUrl);
+      return {
+        type: 'browser_action',
+        action: 'open_site',
+        found: true,
+        targetX: coords.addressBar.x,
+        targetY: coords.addressBar.y,
+        message: `Navigated to ${targetName} in Google Chrome (${siteUrl}).`,
+        spokenText: `Opening ${targetName} in Google Chrome for you now.`
+      };
+    }
+  }
+
+  // 7. Guided Web Search & Exploration (e.g. "Search for latest AI news on Chrome")
   const searchMatch = query.match(/(?:search\s+(?:for\s+)?|look\s+up\s+|find\s+on\s+(?:chrome|google|web)\s+)(.+)/i);
   if (searchMatch && searchMatch[1]) {
     const rawTopic = searchMatch[1].replace(/(?:on|in)\s+(?:chrome|google|browser|the web)/gi, '').trim();
