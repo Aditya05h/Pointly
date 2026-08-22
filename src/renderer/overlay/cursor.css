@@ -1,3 +1,289 @@
-html, body { width: 32px; height: 32px; margin: 0; overflow: hidden; background: transparent; }
-.pointer { position: absolute; z-index: 2; left: 2px; top: 2px; width: 0; height: 0; border-top: 25px solid #1c1c1a; border-right: 16px solid transparent; transform: rotate(-8deg); filter: drop-shadow(1px 2px 1px #1115); }
-.pointer::after { content: ''; position: absolute; left: 3px; top: -21px; width: 0; height: 0; border-top: 18px solid #f5f4ef; border-right: 11px solid transparent; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@500;600;700;800&display=swap');
+
+:root {
+  --dark-red-main: #800a1e;
+  --dark-red-glow: #b81432;
+  --dark-red-deep: #4c0410;
+  --ruby-highlight: #ff4d6d;
+  --bubble-bg: rgba(18, 18, 22, 0.92);
+  --bubble-border: rgba(184, 20, 50, 0.4);
+  --text-white: #f8fafc;
+  --text-dim: #cbd5e1;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: 'Manrope', -apple-system, sans-serif;
+  user-select: none;
+}
+
+.clicky-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+  width: 320px;
+  pointer-events: none; /* Let clicks pass through except on interactive elements */
+}
+
+/* 26px Dark Red Cursor Buddy */
+.buddy-container {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+}
+
+.buddy-orb {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--dark-red-glow) 0%, var(--dark-red-main) 55%, var(--dark-red-deep) 100%);
+  border: 1.5px solid var(--ruby-highlight);
+  box-shadow: 0 0 12px rgba(184, 20, 50, 0.5), 0 2px 8px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+}
+
+.buddy-orb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 20px rgba(255, 77, 109, 0.8), 0 4px 12px rgba(0, 0, 0, 0.7);
+}
+
+.buddy-orb:active {
+  transform: scale(0.95);
+}
+
+/* Expressive Buddy Eyes */
+.buddy-face {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.buddy-eye {
+  width: 3px;
+  height: 4px;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 0 4px #ffffff;
+  transition: all 0.15s ease;
+  animation: blink 4.5s infinite;
+}
+
+@keyframes blink {
+  0%, 96%, 100% { transform: scaleY(1); }
+  98% { transform: scaleY(0.1); }
+}
+
+/* Glowing Pulsing Aura around Buddy */
+.buddy-aura {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ruby-highlight);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* State: Listening */
+.clicky-wrapper.listening .buddy-orb {
+  border-color: #ff0055;
+  box-shadow: 0 0 24px rgba(255, 0, 85, 0.9);
+  animation: buddy-listen-bounce 0.6s infinite alternate ease-in-out;
+}
+
+.clicky-wrapper.listening .buddy-aura {
+  opacity: 1;
+  animation: aura-expand 1s infinite ease-out;
+}
+
+@keyframes aura-expand {
+  0% { transform: scale(0.9); opacity: 0.9; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes buddy-listen-bounce {
+  from { transform: scale(1); }
+  to { transform: scale(1.18); }
+}
+
+/* State: Thinking */
+.clicky-wrapper.thinking .buddy-orb {
+  animation: buddy-think 1s linear infinite;
+  box-shadow: 0 0 20px var(--ruby-highlight);
+}
+
+@keyframes buddy-think {
+  0% { transform: rotate(0deg) scale(1.05); }
+  50% { transform: rotate(180deg) scale(1.15); }
+  100% { transform: rotate(360deg) scale(1.05); }
+}
+
+/* State: Speaking */
+.clicky-wrapper.speaking .buddy-orb {
+  border-color: #ff85a1;
+  box-shadow: 0 0 28px rgba(255, 133, 161, 0.85);
+  animation: buddy-talk 0.35s infinite alternate ease-in-out;
+}
+
+@keyframes buddy-talk {
+  from { transform: scale(1); }
+  to { transform: scale(1.2); }
+}
+
+/* Floating Transient Speech Bubble */
+.speech-bubble {
+  position: relative;
+  background: var(--bubble-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--bubble-border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  max-width: 280px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(-4px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 20;
+}
+
+.speech-bubble.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.bubble-content {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-white);
+  word-break: break-word;
+}
+
+.bubble-content strong {
+  color: #ff758f;
+}
+
+/* Minimal Expandable Typing Capsule */
+.type-capsule {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  background: var(--bubble-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--bubble-border);
+  border-radius: 20px;
+  padding: 3px 6px 3px 10px;
+  width: 240px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.type-capsule.visible {
+  display: flex;
+}
+
+.capsule-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font: 11.5px 'Manrope', sans-serif;
+  outline: none;
+}
+
+.capsule-input::placeholder {
+  color: #64748b;
+  font-size: 10.5px;
+}
+
+.capsule-send {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: var(--dark-red-main);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: bold;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.capsule-send:hover {
+  background: var(--dark-red-glow);
+  transform: scale(1.1);
+}
+
+/* Spotlight Beacon Ring */
+.spotlight-beacon {
+  position: absolute;
+  display: none;
+  width: 60px;
+  height: 60px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 100;
+}
+
+.spotlight-beacon.active {
+  display: block;
+}
+
+.beacon-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #ff0055;
+  box-shadow: 0 0 16px #ff0055;
+  animation: beacon-pulse 1.2s infinite ease-out;
+}
+
+.beacon-ring.ring-2 {
+  animation-delay: 0.4s;
+}
+
+.beacon-tag {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--dark-red-main);
+  border: 1px solid var(--ruby-highlight);
+  color: #ffffff;
+  font: 9px 'DM Mono', monospace;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+@keyframes beacon-pulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}

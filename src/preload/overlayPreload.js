@@ -1,6 +1,30 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('pointlyOverlay', {
+contextBridge.exposeInMainWorld('pointlyCompanion', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
-  showMenu: () => ipcRenderer.send('overlay:show-menu')
+  saveSettings: (settings) => ipcRenderer.invoke('settings:save', settings),
+  executeCommand: (command, options) => ipcRenderer.invoke('companion:execute-command', command, options),
+  transcribeAudio: (audio, options) => ipcRenderer.invoke('ai:stt', audio, options),
+  textToSpeech: (options) => ipcRenderer.invoke('ai:tts', options),
+  findDesktopItem: (query) => ipcRenderer.invoke('desktop:find', query),
+  captureScreen: () => ipcRenderer.invoke('desktop:capture'),
+  glideTo: (x, y) => ipcRenderer.send('companion:glide', { x, y }),
+  setTypingMode: (active) => ipcRenderer.send('companion:set-typing', active),
+  openFullChat: () => ipcRenderer.send('companion:open-chat'),
+  setIgnoreMouseEvents: (ignore, options) => ipcRenderer.send('overlay:set-ignore-mouse', { ignore, options }),
+  onVoiceToggle: (callback) => {
+    const handler = (_, data) => callback(data);
+    ipcRenderer.on('voice:toggle', handler);
+    return () => ipcRenderer.removeListener('voice:toggle', handler);
+  },
+  onVoiceEnd: (callback) => {
+    const handler = (_, data) => callback(data);
+    ipcRenderer.on('voice:end', handler);
+    return () => ipcRenderer.removeListener('voice:end', handler);
+  },
+  onCapsuleToggle: (callback) => {
+    const handler = (_, data) => callback(data);
+    ipcRenderer.on('capsule:toggle', handler);
+    return () => ipcRenderer.removeListener('capsule:toggle', handler);
+  }
 });

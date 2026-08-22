@@ -10,28 +10,43 @@ function getSarvamClient() {
   return new SarvamAIClient({ apiSubscriptionKey: apiKey });
 }
 
+function resolveTtsModel(speaker, requestedModel) {
+  if (speaker && speaker.toLowerCase() === 'anushka') {
+    return 'bulbul:v2';
+  }
+  return requestedModel || 'bulbul:v3';
+}
+
 /**
- * Convert text to speech using Sarvam AI (bulbul:v3).
+ * Convert text to speech using Sarvam AI.
+ * Automatically selects bulbul:v2 for Anushka and bulbul:v3 for Shubh/Aditya/etc.
  */
 async function textToSpeech({
   text,
   speaker = 'shubh',
   target_language_code = 'en-IN',
-  model = 'bulbul:v3',
+  model,
   pace = 1.0
 } = {}) {
   if (!text || !text.trim()) throw new Error('Text is required for TTS');
   const serverUrl = process.env.POINTLY_SERVER_URL || 'http://localhost:8787';
+  const resolvedModel = resolveTtsModel(speaker, model);
 
   // 1. Try server proxy first
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     const response = await fetch(`${serverUrl}/api/sarvam/tts`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text, speaker, target_language_code, model, pace }),
+      body: JSON.stringify({
+        text: text.trim(),
+        speaker: speaker.toLowerCase(),
+        target_language_code,
+        model: resolvedModel,
+        pace
+      }),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -49,14 +64,16 @@ async function textToSpeech({
     const result = await client.textToSpeech.convert({
       text: text.trim(),
       target_language_code,
-      speaker,
-      model,
+      speaker: speaker.toLowerCase(),
+      model: resolvedModel,
       pace
     });
     const audioBase64 = result?.audios?.[0] || '';
     return {
       audio: audioBase64,
       audioDataUrl: audioBase64 ? `data:audio/wav;base64,${audioBase64}` : null,
+      model: resolvedModel,
+      speaker,
       request_id: result?.request_id
     };
   }
@@ -74,7 +91,7 @@ async function transcribeAudio(audio, options = {}) {
   // 1. Try server proxy first
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch(`${serverUrl}/api/sarvam/transcribe`, {
       method: 'POST',
@@ -104,6 +121,10 @@ async function transcribeAudio(audio, options = {}) {
     audioBuffer = Buffer.from(audio);
   }
 
+  if (audioBuffer.length < 50) {
+    throw new Error('Audio was too short. Please speak again.');
+  }
+
   const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
   formData.append('file', audioBlob, 'recording.wav');
   formData.append('model', options.model || 'saaras:v3');
@@ -121,8 +142,10 @@ async function transcribeAudio(audio, options = {}) {
   if (!apiResponse.ok) {
     const err = await apiResponse.text();
     let errJson;
-    try { errJson = JSON.parse(err); } catch (_) {}
-    throw new Error(errJson?.error?.message || errJson?.message || `Sarvam STT failed (${apiResponse.status})`);
+    try {
+      errJson = JSON.parse(err);
+    } catch (_) {}
+    throw new Error(errJson?.error?.message || errJson?.message || `Sarvam STT error (${apiResponse.status})`);
   }
 
   const data = await apiResponse.json();

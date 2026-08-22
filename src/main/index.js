@@ -16,7 +16,7 @@ function createWindows() {
 }
 
 app.whenReady().then(() => {
-  // Allow media / microphone permissions without blocking prompt
+  // Allow microphone and media permissions
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
     if (permission === 'media' || permission === 'microphone') {
       return callback(true);
@@ -32,23 +32,49 @@ app.whenReady().then(() => {
   });
 
   createWindows();
-  registerIpcHandlers({ getChatWindow: () => chatWindow, getOverlayWindow: () => overlayWindow });
+  registerIpcHandlers({
+    getChatWindow: () => chatWindow,
+    getOverlayWindow: () => overlayWindow
+  });
 
-  const toggleVoice = () => {
-    if (!chatWindow || chatWindow.isDestroyed()) {
-      createWindows();
-    }
-    if (!chatWindow.isVisible()) {
-      chatWindow.show();
-    }
-    chatWindow.focus();
-    chatWindow.webContents.send('voice:toggle');
+  // Hotkey 1: Ctrl + Alt + Space -> Toggle full chat dashboard
+  const toggleFullChat = () => {
+    toggleChatWindow(chatWindow);
   };
 
-  registerGlobalHotkey(
-    () => toggleChatWindow(chatWindow),
-    toggleVoice
-  );
+  // Hotkey 2: Ctrl + Space -> Voice Command / Push-to-Talk on Cursor Companion
+  const toggleCompanionVoice = () => {
+    if (!overlayWindow || overlayWindow.isDestroyed()) {
+      overlayWindow = createOverlayWindow();
+    }
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.webContents.send('voice:toggle');
+    }
+  };
+
+  // Hotkey 3: Ctrl + E -> End Voice Session / cancel speech & playback
+  const endCompanionVoice = () => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.webContents.send('voice:end');
+    }
+  };
+
+  // Hotkey 4: Ctrl + T -> Toggle text typing capsule beside cursor
+  const toggleCompanionType = () => {
+    if (!overlayWindow || overlayWindow.isDestroyed()) {
+      overlayWindow = createOverlayWindow();
+    }
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.webContents.send('capsule:toggle');
+    }
+  };
+
+  registerGlobalHotkey({
+    toggleWindow: toggleFullChat,
+    toggleVoice: toggleCompanionVoice,
+    endVoice: endCompanionVoice,
+    openType: toggleCompanionType
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindows();

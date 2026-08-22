@@ -8,6 +8,14 @@ function getSarvamClient() {
   return new SarvamAIClient({ apiSubscriptionKey: apiKey });
 }
 
+// Map speaker to appropriate Sarvam model (anushka requires bulbul:v2 or bulbul:v1)
+function resolveTtsModel(speaker, requestedModel) {
+  if (speaker && speaker.toLowerCase() === 'anushka') {
+    return 'bulbul:v2';
+  }
+  return requestedModel || 'bulbul:v3';
+}
+
 // Text to Speech endpoint
 router.post('/tts', async (request, response) => {
   const apiKey = process.env.SARVAM_API_KEY;
@@ -17,7 +25,7 @@ router.post('/tts', async (request, response) => {
     text,
     speaker = 'shubh',
     target_language_code = 'en-IN',
-    model = 'bulbul:v3',
+    model,
     pace = 1.0
   } = request.body || {};
 
@@ -25,20 +33,24 @@ router.post('/tts', async (request, response) => {
     return response.status(400).json({ error: 'text is required' });
   }
 
+  const resolvedModel = resolveTtsModel(speaker, model);
+
   try {
     const client = getSarvamClient();
     if (client) {
       const result = await client.textToSpeech.convert({
         text: text.trim(),
         target_language_code,
-        speaker,
-        model,
+        speaker: speaker.toLowerCase(),
+        model: resolvedModel,
         pace
       });
       const audioBase64 = result?.audios?.[0] || '';
       return response.json({
         audio: audioBase64,
         audioDataUrl: audioBase64 ? `data:audio/wav;base64,${audioBase64}` : null,
+        model: resolvedModel,
+        speaker,
         request_id: result?.request_id
       });
     }
@@ -53,8 +65,8 @@ router.post('/tts', async (request, response) => {
       body: JSON.stringify({
         text: text.trim(),
         target_language_code,
-        speaker,
-        model,
+        speaker: speaker.toLowerCase(),
+        model: resolvedModel,
         pace
       })
     });
@@ -73,9 +85,12 @@ router.post('/tts', async (request, response) => {
     return response.json({
       audio: audioBase64,
       audioDataUrl: audioBase64 ? `data:audio/wav;base64,${audioBase64}` : null,
+      model: resolvedModel,
+      speaker,
       request_id: data?.request_id
     });
   } catch (error) {
+    console.error('Sarvam TTS Error:', error);
     return response.status(500).json({ error: error.message || 'Failed to convert text to speech' });
   }
 });
@@ -104,6 +119,10 @@ router.post('/transcribe', async (request, response) => {
       audioBuffer = Buffer.from(base64Data, 'base64');
     } else {
       audioBuffer = Buffer.from(audio);
+    }
+
+    if (audioBuffer.length < 50) {
+      return response.status(400).json({ error: 'Audio recording was too short. Please speak again.' });
     }
 
     const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
@@ -141,6 +160,7 @@ router.post('/transcribe', async (request, response) => {
       request_id: data.request_id
     });
   } catch (error) {
+    console.error('Sarvam STT Route Error:', error);
     return response.status(500).json({ error: error.message || 'Failed to process audio with Sarvam' });
   }
 });

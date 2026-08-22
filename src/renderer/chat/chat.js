@@ -13,8 +13,10 @@ const autoTtsToggle = document.querySelector('#auto-tts-toggle');
 let assistMode = false;
 let autoSpeak = true;
 let isRecording = false;
-let mediaRecorder = null;
-let audioChunks = [];
+let audioContext = null;
+let mediaStream = null;
+let scriptProcessor = null;
+let pcmData = [];
 let currentAudioPlayer = null;
 
 // Initialize settings from store
@@ -47,14 +49,44 @@ function updateVoiceStatus(status, text) {
   if (voiceStatusText) voiceStatusText.textContent = text;
 }
 
-// Convert Audio Blob to Base64 WAV
+// Encode float PCM samples into 16kHz 16-bit Mono WAV
+function encodeWav(samples, sampleRate = 16000) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // Mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  let offset = 44;
+  for (let i = 0; i < samples.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
 async function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64data = reader.result.split(',')[1];
-      resolve(base64data);
-    };
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
@@ -86,8 +118,7 @@ async function playTtsAudio(text, btn = null) {
     const res = await window.pointly.textToSpeech({
       text,
       speaker,
-      target_language_code: targetLanguage,
-      model: 'bulbul:v3'
+      target_language_code: targetLanguage
     });
 
     const audioUrl = res?.audioDataUrl || (res?.audio ? `data:audio/wav;base64,${res.audio}` : null);
@@ -125,7 +156,6 @@ async function playTtsAudio(text, btn = null) {
   }
 }
 
-// Add message to chat list
 function addMessage(text, role) {
   const message = document.createElement('div');
   message.className = `message ${role}`;
@@ -164,60 +194,78 @@ function addMessage(text, role) {
   return message;
 }
 
-// Start Voice Recording
+// Start 16kHz WAV Voice Recording
 async function startRecording() {
   if (isRecording) return;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        channelCount: 1,
+        sampleRate: 16000,
+        echoCancellation: true,
+        noiseSuppression: true
+      }
+    });
 
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) audioChunks.push(event.data);
+    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    const source = audioContext.createMediaStreamSource(mediaStream);
+    scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+    pcmData = [];
+
+    scriptProcessor.onaudioprocess = (e) => {
+      if (!isRecording) return;
+      const channel = e.inputBuffer.getChannelData(0);
+      pcmData.push(new Float32Array(channel));
     };
 
-    mediaRecorder.onstop = async () => {
-      stream.getTracks().forEach((track) => track.stop());
-      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-      await processVoiceInput(audioBlob);
-    };
+    source.connect(scriptProcessor);
+    scriptProcessor.connect(audioContext.destination);
 
-    mediaRecorder.start();
     isRecording = true;
-    updateVoiceStatus('recording', 'Listening... Click mic again to send');
+    updateVoiceStatus('recording', 'Listening... Click mic to stop');
   } catch (error) {
     console.error('Microphone error:', error);
     updateVoiceStatus('idle', `Mic Error: ${error.message}`);
   }
 }
 
-// Stop Voice Recording
-function stopRecording() {
-  if (!isRecording || !mediaRecorder) return;
+// Stop 16kHz WAV Recording
+async function stopRecording() {
+  if (!isRecording) return;
   isRecording = false;
   updateVoiceStatus('idle', 'Transcribing with Sarvam saaras:v3...');
-  try {
-    mediaRecorder.stop();
-  } catch (err) {
-    console.error('Error stopping recorder:', err);
-  }
-}
 
-function toggleRecording() {
-  if (isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((track) => track.stop());
+    mediaStream = null;
   }
-}
+  if (scriptProcessor) {
+    scriptProcessor.disconnect();
+    scriptProcessor = null;
+  }
+  if (audioContext) {
+    audioContext.close();
+    audioContext = null;
+  }
 
-// Process Audio -> Sarvam STT -> Gemini -> Sarvam TTS
-async function processVoiceInput(audioBlob) {
+  const totalLength = pcmData.reduce((acc, chunk) => acc + chunk.length, 0);
+  if (totalLength < 1600) {
+    updateVoiceStatus('idle', 'Recording too short. Speak and try again.');
+    return;
+  }
+
+  const mergedPCM = new Float32Array(totalLength);
+  let offset = 0;
+  for (const chunk of pcmData) {
+    mergedPCM.set(chunk, offset);
+    offset += chunk.length;
+  }
+
   try {
-    const base64Audio = await blobToBase64(audioBlob);
+    const wavBlob = encodeWav(mergedPCM, 16000);
+    const base64Audio = await blobToBase64(wavBlob);
     const lang = voiceLangSelect?.value || 'unknown';
 
-    updateVoiceStatus('idle', 'Transcribing audio...');
     const sttResult = await window.pointly.transcribeAudio(base64Audio, {
       model: 'saaras:v3',
       mode: 'transcribe',
@@ -232,8 +280,6 @@ async function processVoiceInput(audioBlob) {
 
     updateVoiceStatus('idle', `Transcribed: "${transcript}"`);
     prompt.value = transcript;
-
-    // Send query
     await handleSend(transcript, true);
   } catch (error) {
     console.error('Voice processing error:', error);
@@ -241,7 +287,14 @@ async function processVoiceInput(audioBlob) {
   }
 }
 
-// Submit message handler
+function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
 async function handleSend(customText = null, fromVoice = false) {
   const text = (customText !== null ? customText : prompt.value).trim();
   if (!text) return;
@@ -255,7 +308,6 @@ async function handleSend(customText = null, fromVoice = false) {
     pendingMsg.remove();
     addMessage(answer, 'assistant');
 
-    // Auto-speak response if enabled or from voice command
     if (autoSpeak || fromVoice) {
       playTtsAudio(answer);
     }
@@ -265,13 +317,11 @@ async function handleSend(customText = null, fromVoice = false) {
   }
 }
 
-// Form submit event
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   await handleSend();
 });
 
-// UI Event Listeners
 micBtn.addEventListener('click', toggleRecording);
 quickMicBtn.addEventListener('click', toggleRecording);
 
@@ -299,25 +349,9 @@ assistButton.addEventListener('click', () => {
 document.querySelector('#close').addEventListener('click', () => window.pointly.close());
 document.querySelector('#minimize').addEventListener('click', () => window.pointly.minimize());
 
-// Enter key submit & Ctrl+Space voice shortcut
 prompt.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     form.requestSubmit();
   }
 });
-
-// Keyboard shortcut inside the window: Ctrl + Space to toggle voice
-window.addEventListener('keydown', (event) => {
-  if (event.ctrlKey && event.code === 'Space') {
-    event.preventDefault();
-    toggleRecording();
-  }
-});
-
-// Global hotkey trigger from main process
-if (window.pointly?.onVoiceToggle) {
-  window.pointly.onVoiceToggle(() => {
-    toggleRecording();
-  });
-}

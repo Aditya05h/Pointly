@@ -1,3 +1,53 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><title>Pointly cursor</title><link rel="stylesheet" href="cursor.css"></head>
-<body><div class="pointer" aria-hidden="true"></div></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pointly Cursor Companion</title>
+  <link rel="stylesheet" href="cursor.css">
+</head>
+<body>
+  <div class="clicky-wrapper" id="clicky-wrapper">
+    
+    <!-- Ultra-Compact 26px Dark Red Cursor Buddy -->
+    <div class="buddy-container" id="buddy-container">
+      <div class="buddy-aura" id="buddy-aura"></div>
+      <div class="buddy-orb" id="buddy-orb" title="Pointly (Hold Ctrl+Space to speak, click to type)">
+        <div class="buddy-face">
+          <span class="buddy-eye left"></span>
+          <span class="buddy-eye right"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Transient Speech Bubble (Appears during listening/speaking/affirmations, auto-fades) -->
+    <div class="speech-bubble" id="speech-bubble">
+      <div class="bubble-tail"></div>
+      <div class="bubble-content" id="bubble-content">
+        Ready. Hold <strong>Ctrl+Space</strong> to talk.
+      </div>
+    </div>
+
+    <!-- Minimal Expandable Typing Capsule -->
+    <form class="type-capsule" id="type-capsule">
+      <input
+        type="text"
+        id="capsule-input"
+        class="capsule-input"
+        placeholder="Ask or locate on desktop..."
+        autocomplete="off"
+      />
+      <button type="submit" class="capsule-send" id="capsule-send">↗</button>
+    </form>
+
+  </div>
+
+  <!-- Screen Spotlight Beacon Ring (projects to found files/items) -->
+  <div class="spotlight-beacon" id="spotlight-beacon">
+    <div class="beacon-ring ring-1"></div>
+    <div class="beacon-ring ring-2"></div>
+    <div class="beacon-tag" id="beacon-tag">Found File</div>
+  </div>
+
+  <script src="cursor.js"></script>
+</body>
+</html>

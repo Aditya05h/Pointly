@@ -7,7 +7,7 @@ function createChatWindow(onClose) {
     height: 650,
     minWidth: 360,
     minHeight: 520,
-    show: true,
+    show: false,
     frame: false,
     backgroundColor: '#f5f4ef',
     webPreferences: { preload: path.join(__dirname, '../../preload/chatPreload.js') }
