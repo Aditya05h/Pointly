@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Pointly</title><link rel="stylesheet" href="chat.css"></head>
+<body>
+  <main class="shell">
+    <header class="titlebar"><div class="brand"><span class="brand-mark">+</span><strong>pointly</strong><small>your quiet co-pilot</small></div><nav><button id="minimize" title="Minimize">−</button><button id="close" title="Close">×</button></nav></header>
+    <section class="intro"><p class="eyebrow">READY WHEN YOU ARE</p><h1>What should we<br><em>figure out?</em></h1><p class="subcopy">Ask a question, describe what is on your screen, or switch on Assist Mode when you want Pointly to take the next step.</p></section>
+    <section id="messages" class="messages" aria-live="polite"><div class="message assistant">Hi. I’m Pointly. How can I make this moment easier?</div></section>
+    <form id="chat-form" class="composer"><textarea id="prompt" rows="2" placeholder="Type a thought..." aria-label="Message Pointly"></textarea><div class="composer-footer"><button type="button" id="assist" class="mode">○ Assist Mode</button><button type="submit" class="send" title="Send message">↗</button></div></form>
+    <footer><span>⌘ ⇧ SPACE</span><span>POINTLY 0.1</span></footer>
+  </main><script src="chat.js"></script>
+</body></html>

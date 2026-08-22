@@ -1,0 +1,10 @@
+appId: com.pointly.desktop
+productName: Pointly
+directories:
+  output: dist
+files:
+  - src/**/*
+  - assets/**/*
+  - package.json
+win:
+  target: nsis
