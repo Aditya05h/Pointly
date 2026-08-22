@@ -31,7 +31,11 @@ const APP_COMMANDS = {
   calc: 'start calc',
   calculator: 'start calc',
   chrome: 'start chrome',
+  'google chrome': 'start chrome',
+  googlechrome: 'start chrome',
   edge: 'start msedge',
+  'microsoft edge': 'start msedge',
+  msedge: 'start msedge',
   browser: 'start msedge',
   explorer: 'start explorer',
   'file explorer': 'start explorer',
@@ -42,8 +46,16 @@ const APP_COMMANDS = {
   cmd: 'start cmd',
   code: 'start code',
   vscode: 'start code',
+  'vs code': 'start code',
   paint: 'start mspaint',
+  mspaint: 'start mspaint',
   spotify: 'start spotify',
+  word: 'start winword',
+  'ms word': 'start winword',
+  'microsoft word': 'start winword',
+  excel: 'start excel',
+  'ms excel': 'start excel',
+  powerpoint: 'start powerpnt',
   taskmgr: 'start taskmgr',
   'task manager': 'start taskmgr'
 };
@@ -112,8 +124,21 @@ Write-Host "OK";
  * Launch an application.
  */
 async function launchApp(appName) {
-  const clean = (appName || '').toLowerCase().trim();
-  const command = APP_COMMANDS[clean] || `start "" "${clean}"`;
+  const clean = (appName || '').toLowerCase().replace(/^(the|a|an)\s+/, '').trim();
+  let command = APP_COMMANDS[clean];
+
+  if (!command) {
+    for (const [k, v] of Object.entries(APP_COMMANDS)) {
+      if (clean === k || clean.includes(k) || k.includes(clean)) {
+        command = v;
+        break;
+      }
+    }
+  }
+
+  if (!command) {
+    command = `start "" "${clean}"`;
+  }
 
   return new Promise((resolve) => {
     exec(command, (err) => {

@@ -1,8 +1,8 @@
-const { app, BrowserWindow, Menu, ipcMain, clipboard } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, clipboard, screen } = require('electron');
 const { getSettings, saveSettings } = require('../store/settings');
-const { askGemini } = require('../ai/gemini');
+const { askGemini, askGeminiWithVision } = require('../ai/gemini');
 const { textToSpeech, transcribeAudio } = require('../ai/sarvam');
-const { findDesktopItem, captureDesktopScreen } = require('../assist/desktopAnalyzer');
+const { findDesktopItem, getDesktopSummary, captureDesktopScreen } = require('../assist/desktopAnalyzer');
 const { handleOsCommand } = require('../assist/osController');
 const { isDraftWorkflow, generateWordWorkflow } = require('../assist/workflowGuide');
 const { isBrowserNavigation, handleBrowserCommand } = require('../assist/browserController');
@@ -26,10 +26,15 @@ function registerIpcHandlers({ getChatWindow, getOverlayWindow }) {
   ipcMain.handle('ai:tts', (_, options) => textToSpeech(options));
   ipcMain.handle('ai:stt', async (_, audio, options) => {
     try {
-      return await transcribeAudio(audio, options);
+      console.log('[STT IPC] Received audio, base64 length:', audio?.length || 0);
+      console.log('[STT IPC] Options:', JSON.stringify(options));
+      const result = await transcribeAudio(audio, options);
+      console.log('[STT IPC] Transcription result:', JSON.stringify(result));
+      return result;
     } catch (err) {
-      console.error('STT IPC Error:', err.message);
-      return { transcript: '', error: err.message };
+      console.error('[STT IPC] ERROR:', err.message);
+      console.error('[STT IPC] Full error:', err);
+      return { transcript: '', text: '', error: err.message };
     }
   });
 
@@ -108,7 +113,65 @@ function registerIpcHandlers({ getChatWindow, getOverlayWindow }) {
       return osResult;
     }
 
-    // 4. Check for Desktop File/Folder Search (locate names.txt, etc.)
+    // 4. Check for "What is in my desktop" / Desktop Overview
+    const isDesktopOverview = /\b(what('s| is| are)|show|list|tell me|read)\b.*\b(in|on|of)?\s*(my\s+)?desktop\b/i.test(text) ||
+                              /\bwhat\s+(files?|items?|folders?)\s+(are|is|do i have)\b/i.test(text);
+
+    if (isDesktopOverview) {
+      const summaryResult = getDesktopSummary();
+      saveMemory({
+        userPrompt: text,
+        response: summaryResult.message,
+        action: 'desktop_summary',
+        source: options.source || 'companion',
+        screenshotFile: screenshotSaved?.filename
+      });
+
+      return summaryResult;
+    }
+
+    // 4.5 Check for Screen / Background Visual Perception ("what do you see", "what is in my background", "look at my screen")
+    const isScreenVision = /\b(what('s| is| are)\s+(in|on)\s+(my\s+)?(background|screen)|what\s+do\s+you\s+see|look\s+at\s+my\s+screen|see\s+(my\s+)?screen|what\s+am\s+i\s+looking\s+at|analyze\s+(my\s+)?screen|read\s+(my\s+)?screen|what\s+(is|are)\s+(this|open)\s+(window|app|screen)?)\b/i.test(text);
+
+    if (isScreenVision) {
+      let screenCapture = await captureDesktopScreen();
+      let visionAnalysis;
+      if (screenCapture && screenCapture.buffer) {
+        visionAnalysis = await askGeminiWithVision({
+          prompt: text,
+          imageBuffer: screenCapture.buffer
+        });
+      } else {
+        visionAnalysis = 'I tried to look at your screen, but could not capture the display.';
+      }
+
+      saveMemory({
+        userPrompt: text,
+        response: visionAnalysis,
+        action: 'screen_vision',
+        source: options.source || 'companion',
+        screenshotFile: screenshotSaved?.filename
+      });
+
+      let targetX = 500, targetY = 300;
+      try {
+        const primary = screen.getPrimaryDisplay();
+        if (primary && primary.workAreaSize) {
+          targetX = Math.round(primary.workAreaSize.width / 2);
+          targetY = Math.round(primary.workAreaSize.height / 3);
+        }
+      } catch (_) {}
+
+      return {
+        type: 'screen_vision',
+        message: visionAnalysis,
+        spokenText: visionAnalysis,
+        targetX,
+        targetY
+      };
+    }
+
+    // 5. Check for Desktop File/Folder Search (locate names.txt, etc.)
     const isDesktopSearch = /(locate|find|where is|search for|open|show me|look for)\b.*(file|folder|desktop|\.txt|\.pdf|\.doc|\.png|\.jpg|\.csv|\.xlsx|\.zip|\.mp4|\bnames\b)/i.test(text) ||
                             /(locate|find|where is)\b/i.test(text);
 

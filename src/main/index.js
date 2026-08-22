@@ -7,6 +7,8 @@ const { createChatWindow, toggleChatWindow } = require('./windows/chatWindow');
 const { registerGlobalHotkey } = require('./hotkey/globalShortcut');
 const { registerIpcHandlers } = require('./ipc/handlers');
 
+const { startProxyServer } = require('../../server/index');
+
 let overlayWindow;
 let chatWindow;
 
@@ -16,6 +18,8 @@ function createWindows() {
 }
 
 app.whenReady().then(() => {
+  startProxyServer();
+
   // Allow microphone and media permissions
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
     if (permission === 'media' || permission === 'microphone') {

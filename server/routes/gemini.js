@@ -53,7 +53,7 @@ router.post('/', async (request, response) => {
 
       const errText = await apiResponse.text();
       let errJson;
-      try { errJson = JSON.parse(errText); } catch (_) {}
+      try { errJson = JSON.parse(errText); } catch (_) { }
       lastError = errJson?.error?.message || `Status ${apiResponse.status}`;
 
       // If rate limited or model not found, try the next model

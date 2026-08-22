@@ -74,7 +74,7 @@ router.post('/tts', async (request, response) => {
     if (!apiResponse.ok) {
       const errText = await apiResponse.text();
       let errJson;
-      try { errJson = JSON.parse(errText); } catch (_) {}
+      try { errJson = JSON.parse(errText); } catch (_) { }
       return response.status(apiResponse.status).json({
         error: errJson?.error?.message || errJson?.message || `Sarvam TTS error (${apiResponse.status})`
       });
@@ -103,7 +103,7 @@ router.post('/transcribe', async (request, response) => {
   try {
     const {
       audio,
-      language_code = 'unknown',
+      language_code = 'en-IN',
       model = 'saaras:v3',
       mode = 'transcribe'
     } = request.body || {};
@@ -129,9 +129,7 @@ router.post('/transcribe', async (request, response) => {
     formData.append('file', audioBlob, 'recording.wav');
     if (model) formData.append('model', model);
     if (mode) formData.append('mode', mode);
-    if (language_code && language_code !== 'unknown') {
-      formData.append('language_code', language_code);
-    }
+    formData.append('language_code', language_code || 'en-IN');
 
     const apiResponse = await fetch('https://api.sarvam.ai/speech-to-text', {
       method: 'POST',
@@ -146,16 +144,50 @@ router.post('/transcribe', async (request, response) => {
       let errorJson;
       try {
         errorJson = JSON.parse(errorText);
-      } catch (_) {}
+      } catch (_) { }
       const msg = errorJson?.error?.message || errorJson?.message || `Sarvam STT error (${apiResponse.status})`;
       return response.status(apiResponse.status).json({ error: msg });
     }
 
     const data = await apiResponse.json();
+    let transcript = (data.transcript || data.text || '').trim();
+
+    // If saaras:v3 returned empty transcript, automatically retry with saarika:v2.5 model
+    if (!transcript && model !== 'saarika:v2.5') {
+      try {
+        const fallbackFormData = new FormData();
+        fallbackFormData.append('file', audioBlob, 'recording.wav');
+        fallbackFormData.append('model', 'saarika:v2.5');
+        fallbackFormData.append('mode', 'transcribe');
+        fallbackFormData.append('language_code', language_code || 'en-IN');
+
+        const fallbackRes = await fetch('https://api.sarvam.ai/speech-to-text', {
+          method: 'POST',
+          headers: { 'api-subscription-key': apiKey },
+          body: fallbackFormData
+        });
+
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          transcript = (fallbackData.transcript || fallbackData.text || '').trim();
+          if (transcript) {
+            return response.json({
+              text: transcript,
+              transcript,
+              language_code: fallbackData.language_code || 'en-IN',
+              request_id: fallbackData.request_id
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Server STT fallback error:', err.message);
+      }
+    }
+
     return response.json({
-      text: data.transcript || data.text || '',
-      transcript: data.transcript || data.text || '',
-      language_code: data.language_code,
+      text: transcript,
+      transcript,
+      language_code: data.language_code || 'en-IN',
       language_probability: data.language_probability,
       request_id: data.request_id
     });

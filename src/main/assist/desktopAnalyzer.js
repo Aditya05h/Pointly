@@ -151,9 +151,57 @@ async function captureDesktopScreen() {
   return null;
 }
 
+/**
+ * Generate a spoken and visual summary of everything currently on the Desktop.
+ */
+function getDesktopSummary() {
+  const items = listDesktopItems();
+  if (!items || items.length === 0) {
+    return {
+      found: true,
+      type: 'desktop_summary',
+      count: 0,
+      items: [],
+      message: 'Your Desktop is currently clean and empty.',
+      spokenText: 'Your Desktop is currently clean and empty with no files or folders.'
+    };
+  }
+
+  const fileNames = items.map((i) => i.name);
+  const folders = items.filter((i) => i.isDirectory).map((i) => i.name);
+  const files = items.filter((i) => !i.isDirectory).map((i) => i.name);
+
+  let messageText = `Desktop has ${items.length} item${items.length > 1 ? 's' : ''}:\n`;
+  if (folders.length) messageText += `📁 Folders (${folders.length}): ${folders.slice(0, 5).join(', ')}${folders.length > 5 ? '...' : ''}\n`;
+  if (files.length) messageText += `📄 Files (${files.length}): ${files.slice(0, 8).join(', ')}${files.length > 8 ? '...' : ''}`;
+
+  let spoken = `You have ${items.length} item${items.length > 1 ? 's' : ''} on your Desktop. `;
+  if (items.length <= 5) {
+    spoken += `Including ${fileNames.join(', ')}.`;
+  } else {
+    spoken += `Including ${fileNames.slice(0, 5).join(', ')}, and ${items.length - 5} more.`;
+  }
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+
+  return {
+    found: true,
+    type: 'desktop_summary',
+    count: items.length,
+    items,
+    targetX: Math.round(width / 3),
+    targetY: Math.round(height / 3),
+    message: messageText.trim(),
+    spokenText: spoken
+  };
+}
+
 module.exports = {
   getDesktopPaths,
   listDesktopItems,
   findDesktopItem,
+  getDesktopSummary,
   captureDesktopScreen
 };
+

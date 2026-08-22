@@ -265,8 +265,37 @@ function toggleTypingCapsule() {
   }
 }
 
-// Encode 16kHz 16-bit Mono WAV
+// High-Quality Downsampling from Native Hardware Rate (44.1k/48k) to Exact 16kHz
+function downsampleTo16k(samples, inputSampleRate) {
+  if (!inputSampleRate || inputSampleRate === 16000) return samples;
+  const ratio = inputSampleRate / 16000;
+  const newLength = Math.round(samples.length / ratio);
+  const result = new Float32Array(newLength);
+  let offsetResult = 0;
+  let offsetInput = 0;
+
+  while (offsetResult < result.length) {
+    const nextOffsetInput = Math.round((offsetResult + 1) * ratio);
+    let sum = 0;
+    let count = 0;
+    for (let i = offsetInput; i < nextOffsetInput && i < samples.length; i++) {
+      sum += samples[i];
+      count++;
+    }
+    result[offsetResult] = count ? sum / count : 0;
+    offsetResult++;
+    offsetInput = nextOffsetInput;
+  }
+  return result;
+}
+
+// Encode Standard 16kHz 16-bit Mono WAV
 function encodeWav(samples, sampleRate = 16000) {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
 
@@ -281,12 +310,12 @@ function encodeWav(samples, sampleRate = 16000) {
   writeString(8, 'WAVE');
   writeString(12, 'fmt ');
   view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
+  view.setUint16(20, 1, true); // PCM Format
+  view.setUint16(22, numChannels, true);
   view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
   writeString(36, 'data');
   view.setUint32(40, samples.length * 2, true);
 
@@ -296,7 +325,7 @@ function encodeWav(samples, sampleRate = 16000) {
     view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
   }
 
-  return new Blob([view], { type: 'audio/wav' });
+  return new Blob([view.buffer], { type: 'audio/wav' });
 }
 
 async function blobToBase64(blob) {
@@ -308,36 +337,91 @@ async function blobToBase64(blob) {
   });
 }
 
-// Start Push-to-Talk Voice Recording (16kHz PCM)
+let mediaRecorder = null;
+let mediaChunks = [];
+let vadCheckInterval = null;
+let vadMaxRecordingTimer = null;
+let vadSpeechDetected = false;
+let vadSilenceStart = 0;
+
+const VAD_SPEECH_THRESHOLD = 0.01;     // RMS level to consider as speech
+const VAD_SILENCE_TIMEOUT_MS = 2500;   // Auto-stop after 2.5s silence post-speech
+const VAD_MAX_RECORD_MS = 12000;       // Hard max recording duration 12s
+
+// Start Voice Recording (Native MediaRecorder + VAD)
 async function startRecording() {
   if (isRecording) return;
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         channelCount: 1,
-        sampleRate: 16000,
         echoCancellation: true,
-        noiseSuppression: true
+        noiseSuppression: true,
+        autoGainControl: true
       }
     });
 
-    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-    const source = audioContext.createMediaStreamSource(mediaStream);
-    scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
-    pcmData = [];
-
-    scriptProcessor.onaudioprocess = (e) => {
-      if (!isRecording) return;
-      const channel = e.inputBuffer.getChannelData(0);
-      pcmData.push(new Float32Array(channel));
+    mediaChunks = [];
+    mediaRecorder = new MediaRecorder(mediaStream);
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) {
+        mediaChunks.push(e.data);
+      }
     };
 
-    source.connect(scriptProcessor);
-    scriptProcessor.connect(audioContext.destination);
+    // WebAudio Analyser for VAD silence tracking
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
 
+    const source = audioContext.createMediaStreamSource(mediaStream);
+    const vadAnalyser = audioContext.createAnalyser();
+    vadAnalyser.fftSize = 512;
+    source.connect(vadAnalyser);
+
+    vadSpeechDetected = false;
+    vadSilenceStart = 0;
+    const timeData = new Float32Array(vadAnalyser.fftSize);
+
+    vadCheckInterval = setInterval(() => {
+      if (!isRecording) return;
+      vadAnalyser.getFloatTimeDomainData(timeData);
+      let sumSq = 0;
+      for (let i = 0; i < timeData.length; i++) {
+        sumSq += timeData[i] * timeData[i];
+      }
+      const rms = Math.sqrt(sumSq / timeData.length);
+
+      if (rms >= VAD_SPEECH_THRESHOLD) {
+        if (!vadSpeechDetected) {
+          console.log('[VAD] Speech detected, RMS:', rms.toFixed(4));
+          showSpeechBubble('🎙️ Hearing you... keep speaking', false, 0);
+        }
+        vadSpeechDetected = true;
+        vadSilenceStart = 0;
+      } else if (vadSpeechDetected) {
+        if (!vadSilenceStart) {
+          vadSilenceStart = Date.now();
+        } else if (Date.now() - vadSilenceStart >= VAD_SILENCE_TIMEOUT_MS) {
+          console.log('[VAD] Auto-stopping: 2.5s silence detected after speech');
+          stopRecording();
+        }
+      }
+    }, 100);
+
+    mediaRecorder.start(100);
     isRecording = true;
     setBuddyState('listening');
-    showSpeechBubble('Listening (Push-to-Talk)... Speak now.', false, 0);
+    showSpeechBubble('🎤 Listening... Speak now! (auto-stops when you pause)', false, 0);
+
+    vadMaxRecordingTimer = setTimeout(() => {
+      if (isRecording) {
+        console.log('[VAD] Max recording duration reached');
+        stopRecording();
+      }
+    }, VAD_MAX_RECORD_MS);
+
   } catch (err) {
     console.error('Mic recording error:', err);
     setBuddyState('idle');
@@ -349,50 +433,87 @@ async function startRecording() {
 async function stopRecording() {
   if (!isRecording) return;
   isRecording = false;
+
+  if (vadCheckInterval) {
+    clearInterval(vadCheckInterval);
+    vadCheckInterval = null;
+  }
+  if (vadMaxRecordingTimer) {
+    clearTimeout(vadMaxRecordingTimer);
+    vadMaxRecordingTimer = null;
+  }
+
   setBuddyState('thinking');
-  showSpeechBubble('Thinking...', false, 0);
+  showSpeechBubble('Processing speech...', false, 0);
+
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    await new Promise((resolve) => {
+      mediaRecorder.onstop = resolve;
+      mediaRecorder.stop();
+    });
+  }
 
   if (mediaStream) {
     mediaStream.getTracks().forEach((t) => t.stop());
     mediaStream = null;
   }
-  if (scriptProcessor) {
-    scriptProcessor.disconnect();
-    scriptProcessor = null;
-  }
+
   if (audioContext) {
-    audioContext.close();
+    audioContext.close().catch(() => {});
     audioContext = null;
   }
 
-  const totalLength = pcmData.reduce((acc, chunk) => acc + chunk.length, 0);
-  if (totalLength < 1600) {
+  if (!mediaChunks.length) {
     setBuddyState('idle');
-    showSpeechBubble('Hold Ctrl+Space to speak.', false, 2500);
+    showSpeechBubble('No audio recorded. Press Ctrl+Space and try again.', false, 2500);
     return;
   }
 
-  const mergedPCM = new Float32Array(totalLength);
-  let offset = 0;
-  for (const chunk of pcmData) {
-    mergedPCM.set(chunk, offset);
-    offset += chunk.length;
-  }
-
   try {
-    const wavBlob = encodeWav(mergedPCM, 16000);
+    const rawBlob = new Blob(mediaChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
+    const arrayBuffer = await rawBlob.arrayBuffer();
+
+    // Decode recorded audio into pristine AudioBuffer via Chrome native decoder
+    const decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const decodedAudio = await decodeCtx.decodeAudioData(arrayBuffer);
+    const pcmData = decodedAudio.getChannelData(0);
+    const nativeSampleRate = decodedAudio.sampleRate;
+    decodeCtx.close();
+
+    console.log('[VOICE] Decoded PCM samples:', pcmData.length, 'at', nativeSampleRate, 'Hz');
+    const duration = (pcmData.length / nativeSampleRate).toFixed(2);
+    console.log('[VOICE] Recording duration:', duration, 'seconds');
+
+    if (pcmData.length < nativeSampleRate * 0.3) {
+      setBuddyState('idle');
+      showSpeechBubble('Recording too short. Speak clearly and try again.', false, 2500);
+      return;
+    }
+
+    const downsampled = downsampleTo16k(pcmData, nativeSampleRate);
+    const wavBlob = encodeWav(downsampled, 16000);
     const base64Wav = await blobToBase64(wavBlob);
+
+    console.log('[VOICE] Final WAV blob size:', wavBlob.size, 'bytes');
 
     const sttResult = await window.pointlyCompanion.transcribeAudio(base64Wav, {
       model: 'saaras:v3',
       mode: 'transcribe',
-      language_code: userLang !== 'unknown' ? userLang : undefined
+      language_code: 'en-IN'
     });
 
-    const transcript = sttResult?.transcript || sttResult?.text;
-    if (!transcript || !transcript.trim()) {
+    console.log('[VOICE] STT Result:', JSON.stringify(sttResult));
+
+    if (sttResult?.error) {
       setBuddyState('idle');
-      showSpeechBubble('Could not hear clearly. Speak again.', false, 3000);
+      showSpeechBubble(`STT Error: ${sttResult.error}`, false, 4000);
+      return;
+    }
+
+    const transcript = (sttResult?.transcript || sttResult?.text || '').trim();
+    if (!transcript) {
+      setBuddyState('idle');
+      showSpeechBubble('Could not understand speech. Speak clearly & try again.', false, 3000);
       return;
     }
 
@@ -407,18 +528,26 @@ async function stopRecording() {
 
 // Force Stop / End Voice Session Immediately (Ctrl + E)
 function endVoiceSession() {
+  if (vadCheckInterval) {
+    clearInterval(vadCheckInterval);
+    vadCheckInterval = null;
+  }
+  if (vadMaxRecordingTimer) {
+    clearTimeout(vadMaxRecordingTimer);
+    vadMaxRecordingTimer = null;
+  }
+
   if (isRecording) {
     isRecording = false;
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
     if (mediaStream) {
       mediaStream.getTracks().forEach((t) => t.stop());
       mediaStream = null;
     }
-    if (scriptProcessor) {
-      scriptProcessor.disconnect();
-      scriptProcessor = null;
-    }
     if (audioContext) {
-      audioContext.close();
+      audioContext.close().catch(() => {});
       audioContext = null;
     }
   }
@@ -432,7 +561,7 @@ function endVoiceSession() {
   setBuddyState('idle');
 }
 
-// Play Sarvam TTS Voice Response
+// Play Voice Response (Sarvam TTS with Native SpeechSynthesis Fallback)
 async function playVoiceResponse(text) {
   if (!text || !text.trim()) return;
 
@@ -440,9 +569,13 @@ async function playVoiceResponse(text) {
     currentAudioPlayer.pause();
     currentAudioPlayer = null;
   }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  setBuddyState('speaking');
 
   try {
-    setBuddyState('speaking');
     const res = await window.pointlyCompanion.textToSpeech({
       text,
       speaker: userSpeaker || 'shubh',
@@ -450,33 +583,59 @@ async function playVoiceResponse(text) {
     });
 
     const audioUrl = res?.audioDataUrl || (res?.audio ? `data:audio/wav;base64,${res.audio}` : null);
-    if (!audioUrl) {
-      setBuddyState('idle');
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      currentAudioPlayer = audio;
+
+      audio.onended = () => {
+        setBuddyState('idle');
+        currentAudioPlayer = null;
+        if (!currentWorkflow) {
+          setTimeout(() => hideSpeechBubble(), 4000);
+        }
+      };
+
+      audio.onerror = () => {
+        currentAudioPlayer = null;
+        playNativeVoice(text);
+      };
+
+      await audio.play();
       return;
     }
-
-    const audio = new Audio(audioUrl);
-    currentAudioPlayer = audio;
-
-    audio.onended = () => {
-      setBuddyState('idle');
-      currentAudioPlayer = null;
-      if (!currentWorkflow) {
-        setTimeout(() => hideSpeechBubble(), 4000);
-      }
-    };
-
-    audio.onerror = () => {
-      setBuddyState('idle');
-      currentAudioPlayer = null;
-      if (!currentWorkflow) {
-        setTimeout(() => hideSpeechBubble(), 4000);
-      }
-    };
-
-    await audio.play();
   } catch (err) {
-    console.error('TTS playback error:', err);
+    console.warn('Sarvam TTS error, falling back to native voice:', err);
+  }
+
+  // Fallback to Native Web Speech API
+  playNativeVoice(text);
+}
+
+function playNativeVoice(text) {
+  if (!('speechSynthesis' in window)) {
+    setBuddyState('idle');
+    if (!currentWorkflow) setTimeout(() => hideSpeechBubble(), 4000);
+    return;
+  }
+
+  try {
+    const cleanText = text.replace(/[*_~#>`]/g, '').trim();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = userLang || 'en-IN';
+    utterance.rate = 1.05;
+
+    utterance.onend = () => {
+      setBuddyState('idle');
+      if (!currentWorkflow) setTimeout(() => hideSpeechBubble(), 4000);
+    };
+
+    utterance.onerror = () => {
+      setBuddyState('idle');
+      if (!currentWorkflow) setTimeout(() => hideSpeechBubble(), 4000);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  } catch (_) {
     setBuddyState('idle');
   }
 }
@@ -546,6 +705,40 @@ async function executeTask(commandText, source = 'text') {
       } else {
         setBuddyState('idle');
         setTimeout(() => hideSpeechBubble(), 4000);
+      }
+      return;
+    }
+
+    // 2.5 Desktop Overview / Summary (e.g. "what is in my desktop")
+    if (result.type === 'desktop_summary') {
+      showSpeechBubble(result.message, false, 0);
+
+      if (result.targetX && result.targetY) {
+        glideTo(result.targetX, result.targetY);
+      }
+
+      if (result.spokenText) {
+        await playVoiceResponse(result.spokenText);
+      } else {
+        setBuddyState('idle');
+        setTimeout(() => hideSpeechBubble(), 5000);
+      }
+      return;
+    }
+
+    // 2.7 Screen & Background Vision ("what is in my background", "what do you see on my screen")
+    if (result.type === 'screen_vision') {
+      showSpeechBubble(result.message, false, 0);
+
+      if (result.targetX && result.targetY) {
+        glideTo(result.targetX, result.targetY);
+      }
+
+      if (result.spokenText) {
+        await playVoiceResponse(result.spokenText);
+      } else {
+        setBuddyState('idle');
+        setTimeout(() => hideSpeechBubble(), 6000);
       }
       return;
     }

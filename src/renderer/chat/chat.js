@@ -50,8 +50,37 @@ function updateVoiceStatus(status, text) {
   if (voiceStatusText) voiceStatusText.textContent = text;
 }
 
-// Encode float PCM samples into 16kHz 16-bit Mono WAV
+// High-Quality Downsampling from Native Rate (44.1k/48k) to Exact 16kHz
+function downsampleTo16k(samples, inputSampleRate) {
+  if (!inputSampleRate || inputSampleRate === 16000) return samples;
+  const ratio = inputSampleRate / 16000;
+  const newLength = Math.round(samples.length / ratio);
+  const result = new Float32Array(newLength);
+  let offsetResult = 0;
+  let offsetInput = 0;
+
+  while (offsetResult < result.length) {
+    const nextOffsetInput = Math.round((offsetResult + 1) * ratio);
+    let sum = 0;
+    let count = 0;
+    for (let i = offsetInput; i < nextOffsetInput && i < samples.length; i++) {
+      sum += samples[i];
+      count++;
+    }
+    result[offsetResult] = count ? sum / count : 0;
+    offsetResult++;
+    offsetInput = nextOffsetInput;
+  }
+  return result;
+}
+
+// Encode float PCM samples into Standard 16kHz 16-bit Mono WAV
 function encodeWav(samples, sampleRate = 16000) {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
 
@@ -67,11 +96,11 @@ function encodeWav(samples, sampleRate = 16000) {
   writeString(12, 'fmt ');
   view.setUint32(16, 16, true);
   view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // Mono
+  view.setUint16(22, numChannels, true); // Mono
   view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
   writeString(36, 'data');
   view.setUint32(40, samples.length * 2, true);
 
@@ -123,33 +152,69 @@ async function playTtsAudio(text, btn = null) {
     });
 
     const audioUrl = res?.audioDataUrl || (res?.audio ? `data:audio/wav;base64,${res.audio}` : null);
-    if (!audioUrl) throw new Error('No audio returned from Sarvam');
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      currentAudioPlayer = audio;
 
-    const audio = new Audio(audioUrl);
-    currentAudioPlayer = audio;
+      audio.onended = () => {
+        updateVoiceStatus('idle', 'Press Mic or Ctrl+Space to speak');
+        if (btn) {
+          btn.classList.remove('playing');
+          btn.textContent = '🔊 Speak';
+        }
+        currentAudioPlayer = null;
+      };
 
-    audio.onended = () => {
+      audio.onerror = () => {
+        currentAudioPlayer = null;
+        playNativeChatVoice(text, btn);
+      };
+
+      await audio.play();
+      return;
+    }
+  } catch (err) {
+    console.warn('Sarvam TTS error, falling back to native voice:', err);
+  }
+
+  playNativeChatVoice(text, btn);
+}
+
+function playNativeChatVoice(text, btn) {
+  if (!('speechSynthesis' in window)) {
+    updateVoiceStatus('idle', 'Audio output unavailable');
+    if (btn) {
+      btn.classList.remove('playing');
+      btn.textContent = '🔊 Speak';
+    }
+    return;
+  }
+
+  try {
+    const cleanText = text.replace(/[*_~#>`]/g, '').trim();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = voiceLangSelect?.value || 'en-IN';
+    utterance.rate = 1.05;
+
+    utterance.onend = () => {
       updateVoiceStatus('idle', 'Press Mic or Ctrl+Space to speak');
       if (btn) {
         btn.classList.remove('playing');
         btn.textContent = '🔊 Speak';
       }
-      currentAudioPlayer = null;
     };
 
-    audio.onerror = () => {
-      updateVoiceStatus('idle', 'Audio playback error');
+    utterance.onerror = () => {
+      updateVoiceStatus('idle', 'Speech synthesis error');
       if (btn) {
         btn.classList.remove('playing');
         btn.textContent = '🔊 Speak';
       }
-      currentAudioPlayer = null;
     };
 
-    await audio.play();
-  } catch (err) {
-    console.error('TTS Playback error:', err);
-    updateVoiceStatus('idle', `TTS Error: ${err.message}`);
+    window.speechSynthesis.speak(utterance);
+  } catch (_) {
+    updateVoiceStatus('idle', 'Press Mic or Ctrl+Space to speak');
     if (btn) {
       btn.classList.remove('playing');
       btn.textContent = '🔊 Speak';
@@ -195,86 +260,95 @@ function addMessage(text, role) {
   return message;
 }
 
-// Start 16kHz WAV Voice Recording
+let chatCapturedSampleRate = 16000;
+
+let chatMediaRecorder = null;
+let chatMediaChunks = [];
+
+// Start Voice Recording
 async function startRecording() {
   if (isRecording) return;
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         channelCount: 1,
-        sampleRate: 16000,
         echoCancellation: true,
-        noiseSuppression: true
+        noiseSuppression: true,
+        autoGainControl: true
       }
     });
 
-    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-    const source = audioContext.createMediaStreamSource(mediaStream);
-    scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
-    pcmData = [];
-
-    scriptProcessor.onaudioprocess = (e) => {
-      if (!isRecording) return;
-      const channel = e.inputBuffer.getChannelData(0);
-      pcmData.push(new Float32Array(channel));
+    chatMediaChunks = [];
+    chatMediaRecorder = new MediaRecorder(mediaStream);
+    chatMediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) {
+        chatMediaChunks.push(e.data);
+      }
     };
 
-    source.connect(scriptProcessor);
-    scriptProcessor.connect(audioContext.destination);
-
+    chatMediaRecorder.start(100);
     isRecording = true;
-    updateVoiceStatus('recording', 'Listening... Click mic to stop');
+    updateVoiceStatus('recording', 'Listening... Click mic button to stop');
   } catch (error) {
     console.error('Microphone error:', error);
     updateVoiceStatus('idle', `Mic Error: ${error.message}`);
   }
 }
 
-// Stop 16kHz WAV Recording
+// Stop Voice Recording and Process
 async function stopRecording() {
   if (!isRecording) return;
   isRecording = false;
   updateVoiceStatus('idle', 'Transcribing with Sarvam saaras:v3...');
 
+  if (chatMediaRecorder && chatMediaRecorder.state !== 'inactive') {
+    chatMediaRecorder.stop();
+  }
+
   if (mediaStream) {
     mediaStream.getTracks().forEach((track) => track.stop());
     mediaStream = null;
   }
-  if (scriptProcessor) {
-    scriptProcessor.disconnect();
-    scriptProcessor = null;
-  }
-  if (audioContext) {
-    audioContext.close();
-    audioContext = null;
-  }
 
-  const totalLength = pcmData.reduce((acc, chunk) => acc + chunk.length, 0);
-  if (totalLength < 1600) {
-    updateVoiceStatus('idle', 'Recording too short. Speak and try again.');
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
+  if (!chatMediaChunks.length) {
+    updateVoiceStatus('idle', 'No audio recorded. Click mic to try again.');
     return;
   }
 
-  const mergedPCM = new Float32Array(totalLength);
-  let offset = 0;
-  for (const chunk of pcmData) {
-    mergedPCM.set(chunk, offset);
-    offset += chunk.length;
-  }
-
   try {
-    const wavBlob = encodeWav(mergedPCM, 16000);
+    const rawBlob = new Blob(chatMediaChunks, { type: chatMediaRecorder?.mimeType || 'audio/webm' });
+    const arrayBuffer = await rawBlob.arrayBuffer();
+
+    const decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const decodedAudio = await decodeCtx.decodeAudioData(arrayBuffer);
+    const pcmData = decodedAudio.getChannelData(0);
+    const nativeSampleRate = decodedAudio.sampleRate;
+    decodeCtx.close();
+
+    if (pcmData.length < nativeSampleRate * 0.3) {
+      updateVoiceStatus('idle', 'Recording too short. Speak and try again.');
+      return;
+    }
+
+    const downsampled = downsampleTo16k(pcmData, nativeSampleRate);
+    const wavBlob = encodeWav(downsampled, 16000);
     const base64Audio = await blobToBase64(wavBlob);
-    const lang = voiceLangSelect?.value || 'unknown';
 
     const sttResult = await window.pointly.transcribeAudio(base64Audio, {
       model: 'saaras:v3',
       mode: 'transcribe',
-      language_code: lang !== 'unknown' ? lang : undefined
+      language_code: 'en-IN'
     });
 
-    const transcript = sttResult?.transcript || sttResult?.text;
-    if (!transcript || !transcript.trim()) {
+    if (sttResult?.error) {
+      updateVoiceStatus('idle', `STT Error: ${sttResult.error}`);
+      return;
+    }
+
+    const transcript = (sttResult?.transcript || sttResult?.text || '').trim();
+    if (!transcript) {
       updateVoiceStatus('idle', 'Could not detect speech. Try again.');
       return;
     }

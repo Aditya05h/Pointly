@@ -27,6 +27,14 @@ function runPowerShell(script) {
  * Common quick website URLs.
  */
 const QUICK_SITES = {
+  pointly: 'https://pointlyuvcehack.netlify.app/',
+  'pointly website': 'https://pointlyuvcehack.netlify.app/',
+  'pointly app': 'https://pointlyuvcehack.netlify.app/',
+  'landing page': 'https://pointlyuvcehack.netlify.app/',
+  'pointly landing page': 'https://pointlyuvcehack.netlify.app/',
+  pointlyuvcehack: 'https://pointlyuvcehack.netlify.app/',
+  uvce: 'https://pointlyuvcehack.netlify.app/',
+  'uvce hack': 'https://pointlyuvcehack.netlify.app/',
   canva: 'https://canva.com',
   figma: 'https://figma.com',
   notion: 'https://notion.so',
@@ -81,17 +89,33 @@ Write-Host "OK";
 
 /**
  * Detect if query is asking for browser or webpage navigation.
+ * Intentionally very loose matching to handle speech-to-text errors.
  */
 function isBrowserNavigation(userQuery) {
-  const q = (userQuery || '').toLowerCase();
-  const hasBrowserWords = /chrome|google chrome|browser|webpage|website|url|web|tab|page\b/i.test(q);
-  const hasActions = /search|look up|open|navigate|go to|scroll|refresh|reload|address bar|omnibox|new tab|close tab/i.test(q);
+  const q = (userQuery || '').toLowerCase().trim();
 
+  // Direct Chrome/Browser commands (including common STT misspellings)
+  if (/\b(chrome|crome|krome|chrom|google\s*chrome|browser)\b/i.test(q)) return true;
+
+  // Quick site name direct match (e.g., user just says "canva" or "open youtube")
+  const siteNames = Object.keys(QUICK_SITES);
+  for (const siteName of siteNames) {
+    if (q === siteName || q === `open ${siteName}` || q === `launch ${siteName}` || q === `go to ${siteName}`) return true;
+  }
+
+  const hasBrowserWords = /chrome|crome|krome|google chrome|browser|webpage|website|url|web|tab|page\b/i.test(q);
+  const hasActions = /search|look up|open|navigate|go to|launch|start|scroll|refresh|reload|address bar|omnibox|new tab|close tab/i.test(q);
+
+  if (/^(open|launch|start|run|bring up)\s+(google\s+)?(chrome|crome|krome|browser)\b/i.test(q)) return true;
+  if (/^(open|launch|go to|navigate to)\s+/i.test(q) && siteNames.some(s => q.includes(s))) return true;
   if (hasBrowserWords && hasActions) return true;
-  if (/^open\s+(canva|figma|notion|youtube|github|google|gmail|docs|sheets|drive|wikipedia|reddit|linkedin|twitter|x|devpost|netflix|amazon|spotify)\b/i.test(q)) return true;
+  if (/pointlyuvcehack|netlify\.app/i.test(q)) return true;
   if (/^search\s+(for\s+)?/i.test(q)) return true;
   if (/scroll\s+(down|up|page)/i.test(q)) return true;
   if (/where is (the )?(address bar|search bar|new tab|back button)/i.test(q)) return true;
+
+  // URL patterns directly in speech
+  if (/\b[a-z0-9]+\.(com|org|net|io|ai|app|dev)\b/i.test(q)) return true;
 
   return false;
 }
@@ -112,6 +136,64 @@ async function handleBrowserCommand(userQuery) {
     refreshBtn: { x: 92, y: 82 },
     contentArea: { x: Math.round(screenWidth / 2), y: 360 }
   };
+
+  // 0. Compound Multi-Site Commands (e.g. "open chrome and open canva", "open canva and youtube")
+  if (query.includes(' and ') || query.includes(' & ') || query.includes(' then ') || query.includes(',')) {
+    const parts = query.split(/\s+(?:and|then|&)\s+|,\s*/i);
+    const openedSites = [];
+    let openedChromeDirect = false;
+
+    for (const part of parts) {
+      const p = part.trim();
+      let matched = false;
+      for (const [siteKey, siteUrl] of Object.entries(QUICK_SITES)) {
+        if (p.includes(siteKey) || p === siteKey || p === `open ${siteKey}`) {
+          await openInChrome(siteUrl);
+          openedSites.push(siteKey);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched && (/^(open\s+)?(google\s+)?(chrome|browser)\b/i.test(p) || p === 'chrome')) {
+        openedChromeDirect = true;
+      }
+    }
+
+    if (openedSites.length > 0 || openedChromeDirect) {
+      if (openedChromeDirect && openedSites.length === 0) {
+        await openInChrome('https://www.google.com');
+      }
+      const formattedNames = [
+        ...(openedChromeDirect && !openedSites.includes('chrome') ? ['Google Chrome'] : []),
+        ...openedSites.map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+      ];
+      const summaryNames = formattedNames.join(' and ');
+      return {
+        type: 'browser_action',
+        action: 'open_multiple',
+        found: true,
+        targetX: coords.addressBar.x,
+        targetY: coords.addressBar.y,
+        message: `Opened ${summaryNames} in Google Chrome.`,
+        spokenText: `Opening ${summaryNames} for you in Google Chrome.`
+      };
+    }
+  }
+
+  // 1. Direct Open Google Chrome / Browser
+  if (/^(open|launch|start|run|bring up)\s+(google\s+)?(chrome|crome|krome|browser)\b/i.test(query) ||
+      /\b(chrome|crome|krome)\b/i.test(query) && query.split(/\s+/).length <= 3) {
+    await openInChrome('https://www.google.com');
+    return {
+      type: 'browser_action',
+      action: 'open_chrome',
+      found: true,
+      targetX: coords.addressBar.x,
+      targetY: coords.addressBar.y,
+      message: 'Opened Google Chrome.',
+      spokenText: 'Opening Google Chrome for you now.'
+    };
+  }
 
   // 1. Where is Address Bar / Omnibox / Search Bar
   if (query.includes('address bar') || query.includes('omnibox') || query.includes('url bar') || query.includes('where is search bar in chrome')) {

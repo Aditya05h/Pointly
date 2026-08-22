@@ -88,10 +88,14 @@ async function transcribeAudio(audio, options = {}) {
   if (!audio) throw new Error('Audio data is required for transcription');
   const serverUrl = process.env.POINTLY_SERVER_URL || 'http://localhost:8787';
 
+  console.log('[SARVAM STT] Starting transcription, audio length:', audio?.length || 0);
+  console.log('[SARVAM STT] Options:', JSON.stringify(options));
+  console.log('[SARVAM STT] API Key present:', !!process.env.SARVAM_API_KEY);
+
   // 1. Try server proxy first
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for large audio
 
     const response = await fetch(`${serverUrl}/api/sarvam/transcribe`, {
       method: 'POST',
@@ -102,7 +106,12 @@ async function transcribeAudio(audio, options = {}) {
     clearTimeout(timeoutId);
 
     if (response.ok) {
-      return await response.json();
+      const result = await response.json();
+      console.log('[SARVAM STT] Server proxy result:', JSON.stringify(result));
+      return result;
+    } else {
+      const errText = await response.text();
+      console.error('[SARVAM STT] Server proxy error:', response.status, errText);
     }
   } catch (_) {
     // If proxy server is down, fallback to direct Sarvam API
@@ -129,9 +138,7 @@ async function transcribeAudio(audio, options = {}) {
   formData.append('file', audioBlob, 'recording.wav');
   formData.append('model', options.model || 'saaras:v3');
   formData.append('mode', options.mode || 'transcribe');
-  if (options.language_code && options.language_code !== 'unknown') {
-    formData.append('language_code', options.language_code);
-  }
+  formData.append('language_code', options.language_code || 'en-IN');
 
   const apiResponse = await fetch('https://api.sarvam.ai/speech-to-text', {
     method: 'POST',
@@ -144,15 +151,52 @@ async function transcribeAudio(audio, options = {}) {
     let errJson;
     try {
       errJson = JSON.parse(err);
-    } catch (_) {}
+    } catch (_) { }
     throw new Error(errJson?.error?.message || errJson?.message || `Sarvam STT error (${apiResponse.status})`);
   }
 
   const data = await apiResponse.json();
+  let transcript = (data.transcript || data.text || '').trim();
+
+  // If saaras:v3 returned empty transcript, automatically retry with saarika:v2.5 model
+  if (!transcript && options.model !== 'saarika:v2.5') {
+    try {
+      console.log('[SARVAM STT] saaras:v3 returned empty, retrying with saarika:v2.5...');
+      const fallbackFormData = new FormData();
+      const fallbackBlob = new Blob([audioBuffer], { type: 'audio/wav' });
+      fallbackFormData.append('file', fallbackBlob, 'recording.wav');
+      fallbackFormData.append('model', 'saarika:v2.5');
+      fallbackFormData.append('mode', 'transcribe');
+      fallbackFormData.append('language_code', options.language_code || 'en-IN');
+
+      const fallbackRes = await fetch('https://api.sarvam.ai/speech-to-text', {
+        method: 'POST',
+        headers: { 'api-subscription-key': apiKey },
+        body: fallbackFormData
+      });
+
+      if (fallbackRes.ok) {
+        const fallbackData = await fallbackRes.json();
+        transcript = (fallbackData.transcript || fallbackData.text || '').trim();
+        console.log('[SARVAM STT] saarika:v2.5 fallback result:', transcript);
+        if (transcript) {
+          return {
+            text: transcript,
+            transcript,
+            language_code: fallbackData.language_code || 'en-IN',
+            request_id: fallbackData.request_id
+          };
+        }
+      }
+    } catch (e) {
+      console.error('[SARVAM STT] Fallback error:', e.message);
+    }
+  }
+
   return {
-    text: data.transcript || data.text || '',
-    transcript: data.transcript || data.text || '',
-    language_code: data.language_code,
+    text: transcript,
+    transcript,
+    language_code: data.language_code || 'en-IN',
     language_probability: data.language_probability,
     request_id: data.request_id
   };
