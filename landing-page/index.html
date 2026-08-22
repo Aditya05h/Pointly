@@ -4,19 +4,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pointly — AI Voice Assistant for Windows</title>
+  <title>Pointly — The Ambient AI Desktop Companion for Windows</title>
   <meta name="description"
-    content="Pointly is a next-generation inclusive AI assistant. Control your PC hands-free with voice and text — in 50+ languages. Free for Windows." />
+    content="Pointly is a lightweight, screen-aware desktop AI companion powered by Gemini AI and Sarvam. Push-to-talk voice guidance, guided application workflows, and 100% click pass-through." />
   <meta name="keywords"
-    content="Pointly, AI assistant, voice control, accessibility, Windows, multilingual, hands-free, Gemini AI" />
+    content="Pointly, AI assistant, desktop co-pilot, voice control, workflow automation, Windows AI, Gemini AI, Sarvam AI, productivity, Team XOR" />
   <meta name="theme-color" content="#080808" />
-  <meta property="og:title" content="Pointly — Inclusive AI Assistant" />
-  <meta property="og:description" content="Voice. Text. Next-gen multimodal AI for Windows." />
+  <meta property="og:title" content="Pointly — Ambient AI Desktop Companion" />
+  <meta property="og:description" content="Quiet, screen-aware AI co-pilot beside your cursor. Push-to-talk voice workflows and 100% click pass-through." />
   <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -24,12 +24,19 @@
 <body>
 
   <!-- ═══════════════════════════════════════════════════
-     CUSTOM CURSOR
+     AMBIENT CURSOR CO-PILOT (100% Click Pass-Through)
 ═══════════════════════════════════════════════════ -->
-  <div id="buddy-cursor" aria-hidden="true">
-    <div class="buddy-eyes">
-      <div class="eye left"></div>
-      <div class="eye right"></div>
+  <div id="buddy-cursor" class="buddy-cursor idle" aria-hidden="true">
+    <div class="buddy-aura"></div>
+    <div class="buddy-spin-ring"></div>
+    <div class="buddy-orb">
+      <div class="buddy-face">
+        <div class="buddy-eye left"><div class="buddy-pupil"></div></div>
+        <div class="buddy-eye right"><div class="buddy-pupil"></div></div>
+      </div>
+    </div>
+    <div class="buddy-mini-caption">
+      <span class="caption-text">Pointly Active</span>
     </div>
   </div>
 
@@ -40,28 +47,41 @@
     <nav id="navbar" aria-label="Primary navigation">
       <div class="nav-container">
 
-        <a href="#" class="nav-logo" aria-label="Pointly — go to top">
-          <span class="logo-star">✦</span>
+        <a href="#" class="nav-logo" aria-label="Pointly — home">
+          <span class="logo-buddy-orb">
+            <span class="mini-orb-eye"></span>
+            <span class="mini-orb-eye"></span>
+          </span>
           <span class="logo-name">Pointly</span>
+          <span class="logo-badge">Desktop Co-pilot</span>
         </a>
 
         <ul class="nav-menu" role="list">
           <li><a href="#features" class="nav-link">Features</a></li>
-          <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
-          <li><a href="#install" class="nav-link">Install</a></li>
+          <li><a href="#demo" class="nav-link">Live Demo</a></li>
+          <li><a href="#how-it-works" class="nav-link">Workflows</a></li>
+          <li><a href="#install" class="nav-link">Requirements</a></li>
           <li><a href="#about" class="nav-link">About</a></li>
-          <li><a href="#" class="nav-link" id="nav-login-btn">Login</a></li>
         </ul>
+
+        <!-- Profile / Auth Action -->
+        <div class="nav-auth-wrap">
+          <div id="nav-user-chip" class="nav-user-chip" style="display: none;">
+            <img id="nav-user-avatar" class="nav-user-avatar" src="" alt="User profile" />
+            <span id="nav-user-name" class="nav-user-name"></span>
+          </div>
+          <button type="button" class="nav-link nav-auth-btn" id="nav-login-btn">Sign In</button>
+        </div>
 
         <a href="downloads/Pointly-Setup.exe" class="btn btn--primary btn--sm" id="nav-dl-btn" download>
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
             <path d="M6.5 1v8M3.5 6.5l3 3 3-3M1.5 11.5h10" stroke="currentColor" stroke-width="1.7"
               stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          Download
+          Download Free
         </a>
 
-        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false"
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false"
           aria-controls="nav-drawer">
           <span></span>
           <span></span>
@@ -72,8 +92,9 @@
       <!-- Mobile Drawer -->
       <div class="nav-drawer" id="nav-drawer" aria-hidden="true">
         <a href="#features" class="drawer-link">Features</a>
-        <a href="#how-it-works" class="drawer-link">How It Works</a>
-        <a href="#install" class="drawer-link">Install</a>
+        <a href="#demo" class="drawer-link">Live Demo</a>
+        <a href="#how-it-works" class="drawer-link">Workflows</a>
+        <a href="#install" class="drawer-link">Requirements</a>
         <a href="#about" class="drawer-link">About</a>
         <a href="downloads/Pointly-Setup.exe" class="btn btn--primary drawer-dl" download>
           Download for Windows
@@ -103,21 +124,20 @@
 
           <div class="hero-badge">
             <span class="badge-dot"></span>
-            Next-Gen Multimodal AI &nbsp;·&nbsp; Windows
+            Ambient Desktop Agent &nbsp;·&nbsp; Windows Native
           </div>
 
           <h1>
-            Your voice.<br>
-            <em>Your assistant.</em>
+            Your quiet<br>
+            <em>desktop co-pilot.</em>
           </h1>
 
           <p class="hero-desc">
-            Pointly is an <strong>inclusive AI assistant</strong> that understands
-            <strong>voice commands</strong> and <strong>typed text</strong>
-            — in 50+ languages, on your Windows desktop.
+            Pointly is an ambient, screen-aware AI assistant that floats beside your cursor with 
+            <strong>100% click pass-through</strong>. Speak commands via push-to-talk, automate multi-step application workflows, and navigate apps hands-free — without intrusive windows or broken focus.
           </p>
 
-          <!-- ── MAIN DOWNLOAD CTA — centred visually in hero ── -->
+          <!-- ── MAIN DOWNLOAD CTA ── -->
           <div class="hero-cta">
             <a href="downloads/Pointly-Setup.exe" class="btn btn--primary btn--xl" id="hero-dl-btn" download>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -126,8 +146,8 @@
               </svg>
               Download for Windows
             </a>
-            <a href="#how-it-works" class="btn btn--ghost btn--xl">
-              See How It Works
+            <a href="#demo" class="btn btn--ghost btn--xl">
+              Explore Live Demo
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <path d="M2.5 7h9M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
                   stroke-linejoin="round" />
@@ -135,7 +155,7 @@
             </a>
           </div>
 
-          <p class="hero-fine">Free &nbsp;·&nbsp; Windows 10 / 11 &nbsp;·&nbsp; Account required to download</p>
+          <p class="hero-fine">Free · Windows 10 / 11 (64-bit) · 100% Click Pass-Through</p>
 
         </div><!-- /.hero-copy -->
 
@@ -146,10 +166,26 @@
               <span class="mock-dot rd"></span>
               <span class="mock-dot yw"></span>
               <span class="mock-dot gn"></span>
-              <span class="mock-app-name">Pointly</span>
-              <span class="mock-mode">● VOICE</span>
+              <span class="mock-app-name">Pointly Ambient Co-pilot</span>
+              <span class="mock-mode">● ACTIVE</span>
             </div>
             <div class="mock-body">
+              <!-- Live Guided Workflow Preview -->
+              <div class="hero-stage">
+                <div class="hero-stage-buddy">
+                  <div class="hero-stage-aura"></div>
+                  <div class="hero-stage-orb">
+                    <div class="hero-stage-face">
+                      <div class="hero-stage-eye"><div class="stage-pupil"></div></div>
+                      <div class="hero-stage-eye"><div class="stage-pupil"></div></div>
+                    </div>
+                  </div>
+                  <div class="hero-stage-bubble">
+                    <span>Drafting email in Word... Step 1: Click Blank Document</span>
+                  </div>
+                </div>
+              </div>
+
               <!-- live waveform -->
               <div class="waveform">
                 <span></span><span></span><span></span><span></span><span></span>
@@ -160,10 +196,10 @@
               <div class="chat">
                 <div class="bubble bubble--ai">
                   <span class="bubble-ava">✦</span>
-                  <p>Hello! I'm listening. How can I help?</p>
+                  <p>I'm right beside your cursor. Say <em>"Draft mail in Word"</em> or press <strong>Ctrl+Space</strong> to speak.</p>
                 </div>
                 <div class="bubble bubble--user">
-                  <p>Summarise my last document.</p>
+                  <p>Minimize background apps and find quarterly_report.pdf</p>
                 </div>
                 <div class="bubble bubble--ai">
                   <span class="bubble-ava">✦</span>
@@ -179,18 +215,23 @@
                     <line x1="12" y1="19" x2="12" y2="22" />
                     <line x1="8" y1="22" x2="16" y2="22" />
                   </svg></span>
-                <span class="mock-placeholder">Say something or type…</span>
+                <span class="mock-placeholder">Press Ctrl+Space to speak or Ctrl+T to type…</span>
               </div>
             </div>
           </div>
-          <!-- floating mode pills -->
-          <div class="mode-pill pill-v"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="22" />
-              <line x1="8" y1="22" x2="16" y2="22" />
-            </svg> Voice</div>
+          <!-- floating mode pills with SVG icons -->
+          <div class="mode-pill pill-v">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+            Push-to-Talk (Ctrl+Space)
+          </div>
+          <div class="mode-pill pill-s">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            100% Click Pass-Through
+          </div>
+          <div class="mode-pill pill-g">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+            Step-by-Step UI Guidance
+          </div>
         </div><!-- /.hero-mockup -->
 
       </div><!-- /.hero-inner -->
@@ -200,11 +241,11 @@
     <!-- ═══════════════════════════════════════════════════
      STAT RIBBON
 ═══════════════════════════════════════════════════ -->
-    <div class="stat-ribbon" role="region" aria-label="Statistics">
+    <div class="stat-ribbon" role="region" aria-label="Key Product Metrics">
       <div class="stat-ribbon-inner">
         <div class="stat-item">
-          <span class="stat-num">3+</span>
-          <span class="stat-lbl">Interaction Modes</span>
+          <span class="stat-num">0%</span>
+          <span class="stat-lbl">Click Interruption (Pass-Through)</span>
         </div>
         <span class="stat-divider" aria-hidden="true">|</span>
         <div class="stat-item">
@@ -213,16 +254,147 @@
         </div>
         <span class="stat-divider" aria-hidden="true">|</span>
         <div class="stat-item">
-          <span class="stat-num">&lt;1min</span>
-          <span class="stat-lbl">Setup Time</span>
+          <span class="stat-num">3 Keys</span>
+          <span class="stat-lbl">Instant Activation (Ctrl+Space)</span>
         </div>
         <span class="stat-divider" aria-hidden="true">|</span>
         <div class="stat-item">
-          <span class="stat-num">100%</span>
-          <span class="stat-lbl">Local AI Processing</span>
+          <span class="stat-num">&lt;10ms</span>
+          <span class="stat-lbl">Glide &amp; Guide Latency</span>
         </div>
       </div>
     </div>
+
+
+    <!-- ═══════════════════════════════════════════════════
+     ADAPTIVE INTERACTION ENGINE (LIVE DEMO)
+═══════════════════════════════════════════════════ -->
+    <section id="demo" class="section--alt" aria-labelledby="demo-h">
+      <div class="section-container">
+        
+        <p class="eyebrow eyebrow--c">ADAPTIVE INTERACTION ENGINE</p>
+        <h2 id="demo-h" style="text-align: center;">
+          Built for focus. Engineered for speed.<br>
+          <em>Experience real-time interaction states.</em>
+        </h2>
+        <p class="section-sub" style="margin: 0 auto 48px; text-align: center;">
+          Pointly provides immediate, ambient visual feedback while keeping 100% of your screen clickable.
+          Toggle through its 5 core interaction states below:
+        </p>
+
+        <div class="showcase-card">
+          
+          <!-- State Controls -->
+          <div class="showcase-header">
+            <span class="showcase-title">INTERACTION STATE ENGINE:</span>
+            <div class="state-buttons" role="tablist">
+              <button class="state-btn active" data-state="idle" role="tab" aria-selected="true">
+                <span class="state-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                </span>
+                Idle
+              </button>
+              <button class="state-btn" data-state="listening" role="tab" aria-selected="false">
+                <span class="state-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+                </span>
+                Listening <span class="sub-tag">Voice Active</span>
+              </button>
+              <button class="state-btn" data-state="thinking" role="tab" aria-selected="false">
+                <span class="state-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </span>
+                Reasoning <span class="sub-tag">Gemini AI</span>
+              </button>
+              <button class="state-btn" data-state="speaking" role="tab" aria-selected="false">
+                <span class="state-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                </span>
+                Responding <span class="sub-tag">Sarvam TTS</span>
+              </button>
+              <button class="state-btn" data-state="gliding" role="tab" aria-selected="false">
+                <span class="state-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                </span>
+                Navigating
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Stage Area -->
+          <div class="showcase-stage" id="showcase-stage">
+            <div class="stage-ambient-glow" id="stage-glow"></div>
+            
+            <div class="stage-hint">Interactive Companion Preview — Click to test feedback</div>
+
+            <!-- Interactive Stage Companion -->
+            <div class="stage-buddy idle" id="stage-buddy" tabindex="0" role="button" aria-label="Interactive Companion Preview">
+              <div class="stage-aura" id="stage-aura"></div>
+              <div class="stage-spin-ring" id="stage-spin"></div>
+              <div class="stage-orb" id="stage-orb">
+                <div class="stage-face">
+                  <div class="stage-eye left"><div class="stage-pupil"></div></div>
+                  <div class="stage-eye right"><div class="stage-pupil"></div></div>
+                </div>
+              </div>
+              <!-- Speech bubble -->
+              <div class="stage-speech-bubble" id="stage-bubble">
+                <span id="stage-bubble-text">Pointly is idle beside your cursor, ready for push-to-talk commands.</span>
+              </div>
+            </div>
+
+            <!-- Soundwave visualizer for Speaking state -->
+            <div class="stage-voice-bars" id="stage-voice-bars">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+
+            <!-- Cursor simulated pointer -->
+            <div class="simulated-pointer" id="sim-pointer" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.5">
+                <path d="M3 3l7 18 3-7 7-3L3 3z"/>
+              </svg>
+              <span class="sim-pointer-tag">Desktop Mouse</span>
+            </div>
+
+          </div><!-- /.showcase-stage -->
+
+          <!-- 4 SaaS Feature Pillars -->
+          <div class="showcase-pillars">
+            <div class="pillar-card">
+              <div class="pillar-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+              <h4>Ambient Co-pilot</h4>
+              <p>Floats alongside your cursor with zero window footprint or screen occlusion.</p>
+            </div>
+            <div class="pillar-card">
+              <div class="pillar-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <h4>100% Click Pass-Through</h4>
+              <p>Transparent to OS input — click through Pointly freely with zero mouse interference.</p>
+            </div>
+            <div class="pillar-card">
+              <div class="pillar-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+              </div>
+              <h4>Instant Push-to-Talk</h4>
+              <p>Hold Ctrl+Space to speak natural voice commands with sub-second STT response.</p>
+            </div>
+            <div class="pillar-card">
+              <div class="pillar-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <h4>Guided UI Workflows</h4>
+              <p>Step-by-step beacon spotlighting guides you through complex desktop software.</p>
+            </div>
+          </div>
+
+        </div><!-- /.showcase-card -->
+
+      </div>
+    </section><!-- /#demo -->
 
 
     <!-- ═══════════════════════════════════════════════════
@@ -231,13 +403,13 @@
     <section id="features" aria-labelledby="feat-h">
       <div class="section-container">
 
-        <p class="eyebrow">CAPABILITIES</p>
+        <p class="eyebrow">ENTERPRISE CAPABILITIES</p>
         <h2 id="feat-h">
-          Every way you communicate,<br>
-          <em>Pointly understands.</em>
+          Engineered for effortless flow.<br>
+          <em>Pointly executes real desktop work.</em>
         </h2>
         <p class="section-sub">
-          Designed to remove friction — whether you use your voice or keyboard.
+          Unlike ordinary chatbots that keep you trapped in chat windows, Pointly acts directly on your active desktop canvas.
         </p>
 
         <div class="feat-grid">
@@ -250,57 +422,72 @@
                 <line x1="12" y1="19" x2="12" y2="22" />
                 <line x1="8" y1="22" x2="16" y2="22" />
               </svg></div>
-            <h3>Voice Interaction</h3>
-            <p>Speak naturally in any language. Pointly transcribes in real-time, understands intent, and executes —
-              open apps, search the web, write emails, all without touching a keyboard.</p>
-            <span class="feat-pill">Real-time · Multilingual</span>
+            <h3>Hands-Free Push-to-Talk</h3>
+            <p>Press <code>Ctrl+Space</code> and speak naturally in 50+ languages. Sarvam AI (`saaras:v3` &amp; `bulbul:v3`) and Google Gemini transcribe and reason in real time.</p>
+            <span class="feat-pill">Push-to-Talk · Sarvam STT/TTS</span>
+          </article>
+
+          <article class="feat-card" tabindex="0">
+            <div class="feat-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg></div>
+            <h3>Guided Application Workflows</h3>
+            <p>Say <em>"Draft mail in Word"</em>: Pointly creates the draft in your clipboard, launches Microsoft Word, and glides its spotlight beacon step-by-step across UI buttons.</p>
+            <span class="feat-pill">Step-by-Step UI Highlighting</span>
           </article>
 
           <article class="feat-card" tabindex="0">
             <div class="feat-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                <path d="M2 12h20" />
+                <circle cx="12" cy="12" r="4" />
+                <line x1="4.93" y1="4.93" x2="9.17" y2="9.17" />
+                <line x1="14.83" y1="14.83" x2="19.07" y2="19.07" />
+                <line x1="14.83" y1="9.17" x2="19.07" y2="4.93" />
+                <line x1="4.93" y1="19.07" x2="9.17" y2="14.83" />
               </svg></div>
-            <h3>Multilingual AI</h3>
-            <p>Hindi, Tamil, Arabic, Spanish, Mandarin and 50+ more. Pointly replies fluently in your language, powered
-              by Google Gemini AI at its core.</p>
-            <span class="feat-pill">50+ Languages · Gemini</span>
+            <h3>Chrome &amp; Web Navigation</h3>
+            <p>Say <em>"Search for AI news on Chrome"</em> or <em>"Scroll down"</em>. Pointly controls browser tabs, address bars, and web pages without manual clicks.</p>
+            <span class="feat-pill">Browser Automation · Smooth Glides</span>
+          </article>
+
+          <article class="feat-card" tabindex="0">
+            <div class="feat-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg></div>
+            <h3>Windows OS Window Controls</h3>
+            <p>Say <em>"Minimize Antigravity"</em> or <em>"Show Desktop"</em>. Pointly identifies controls, highlights target actions, and manages your OS windows instantly.</p>
+            <span class="feat-pill">OS Window &amp; Task Controls</span>
           </article>
 
           <article class="feat-card" tabindex="0">
             <div class="feat-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
-                <path d="M6 8h.001" />
-                <path d="M10 8h.001" />
-                <path d="M14 8h.001" />
-                <path d="M18 8h.001" />
-                <path d="M8 12h.001" />
-                <path d="M12 12h.001" />
-                <path d="M16 12h.001" />
+                <path d="M6 8h.001" /><path d="M10 8h.001" /><path d="M14 8h.001" />
                 <path d="M7 16h10" />
               </svg></div>
-            <h3>Floating Chat Interface</h3>
-            <p>Prefer typing? The always-on-top overlay chat lets you ask questions and control your PC without leaving
-              your current app or breaking your flow.</p>
-            <span class="feat-pill">Overlay · Always on Top</span>
+            <h3>Micro Typing Capsule (Ctrl+T)</h3>
+            <p>Prefer quiet typing? Press <code>Ctrl+T</code> to summon the focused typing capsule directly at your cursor position. Issue silent queries without window disruption.</p>
+            <span class="feat-pill">Capsule Overlay · Zero Disruption</span>
           </article>
 
           <article class="feat-card" tabindex="0">
             <div class="feat-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="16" cy="4" r="1" />
-                <path d="m18 19 1-7-6 1" />
-                <path d="m5 8 3-3 5.5 3-2.36 3.5" />
-                <path d="M4.24 14.5a5 5 0 0 0 6.88 6" />
-                <path d="M13.76 17.5a5 5 0 0 0-6.88-6" />
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg></div>
-            <h3>Accessibility First</h3>
-            <p>Built for users with motor disabilities, speech impairments, and language barriers. No friction, no
-              barriers — just seamless, truly inclusive HCI.</p>
-            <span class="feat-pill">Inclusive · WCAG-aligned</span>
+            <h3>Persistent Local Memory</h3>
+            <p>Conversations, task history, and desktop context snapshots are stored locally on your machine. Private, fast, and completely secure.</p>
+            <span class="feat-pill">Local Memory · Complete Privacy</span>
           </article>
 
         </div><!-- /.feat-grid -->
@@ -314,10 +501,10 @@
     <section id="how-it-works" class="section--alt" aria-labelledby="hiw-h">
       <div class="section-container">
 
-        <p class="eyebrow">PROCESS</p>
+        <p class="eyebrow">WORKFLOW</p>
         <h2 id="hiw-h">
-          Up and running<br>
-          <em>in four steps.</em>
+          Frictionless workflow<br>
+          <em>in four simple steps.</em>
         </h2>
 
         <div class="steps-list">
@@ -325,36 +512,32 @@
           <div class="step" tabindex="0">
             <div class="step-no">01</div>
             <div class="step-content">
-              <h3>Download &amp; Install</h3>
-              <p>Click <strong>Download for Windows</strong>. Run <code>Pointly-Setup.exe</code> and follow the 2-step
-                wizard. No admin rights needed for basic use. Takes under a minute.</p>
+              <h3>Install in Seconds</h3>
+              <p>Download and run <code>Pointly-Setup.exe</code>. Everything is bundled natively with zero complex dependencies.</p>
             </div>
           </div>
 
           <div class="step" tabindex="0">
             <div class="step-no">02</div>
             <div class="step-content">
-              <h3>Grant Permissions</h3>
-              <p>Allow <strong>microphone</strong> access for voice. All processing runs locally — nothing leaves your
-                device.</p>
+              <h3>Push-to-Talk with Ctrl+Space</h3>
+              <p>Hold <code>Ctrl+Space</code> anywhere on Windows to speak commands. Pointly listens immediately and executes with sub-second AI reasoning.</p>
             </div>
           </div>
 
           <div class="step" tabindex="0">
             <div class="step-no">03</div>
             <div class="step-content">
-              <h3>Choose Your Mode</h3>
-              <p>Pick <strong>Voice</strong> or <strong>Text</strong> from the system tray. You
-                can switch modes at any time — even mid-conversation.</p>
+              <h3>Watch Step-by-Step UI Guidance</h3>
+              <p>Pointly glides across your screen to highlight buttons, copies drafted content to your clipboard, and affirms completed actions aloud.</p>
             </div>
           </div>
 
           <div class="step" tabindex="0">
             <div class="step-no">04</div>
             <div class="step-content">
-              <h3>Start Interacting</h3>
-              <p>Pointly lives quietly in your tray. Wake it with <code>Ctrl+Alt+Space</code>, or just say It's always
-                ready when you are.</p>
+              <h3>Silent Typing Capsule with Ctrl+T</h3>
+              <p>Press <code>Ctrl+T</code> whenever you need quiet text input at your cursor position. Press <code>Ctrl+E</code> anytime to cancel active sessions.</p>
             </div>
           </div>
 
@@ -369,13 +552,13 @@
     <section id="install" aria-labelledby="req-h">
       <div class="section-container">
 
-        <p class="eyebrow">SYSTEM REQUIREMENTS</p>
+        <p class="eyebrow">TECHNICAL SPECIFICATIONS</p>
         <h2 id="req-h">
           Built for<br>
           <em>modern Windows.</em>
         </h2>
         <p class="section-sub">
-          Lightweight and optimised. Most modern Windows laptops and desktops run Pointly without any issues.
+          GPU-accelerated, lightweight, and engineered for high-performance multitasking.
         </p>
 
         <div class="req-grid">
@@ -384,11 +567,11 @@
                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
                 <line x1="8" y1="21" x2="16" y2="21" />
                 <line x1="12" y1="17" x2="12" y2="21" />
-              </svg></span><strong>OS</strong><span>Windows 10 (1903+) or Windows 11</span></div>
+              </svg></span><strong>OS</strong><span>Windows 10 (1903+) or Windows 11 (64-bit)</span></div>
           <div class="req-card"><span class="req-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg></span><strong>Processor</strong><span>Intel i5 / AMD Ryzen 5 or better</span></div>
+              </svg></span><strong>Processor</strong><span>Intel Core i3/i5/i7 or AMD Ryzen</span></div>
           <div class="req-card"><span class="req-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
@@ -401,31 +584,35 @@
                 <line x1="20" y1="14" x2="23" y2="14" />
                 <line x1="1" y1="9" x2="4" y2="9" />
                 <line x1="1" y1="14" x2="4" y2="14" />
-              </svg></span><strong>RAM</strong><span>8 GB min — 16 GB recommended</span></div>
+              </svg></span><strong>RAM</strong><span>4 GB minimum — 8 GB recommended</span></div>
           <div class="req-card"><span class="req-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                 <polyline points="17 21 17 13 7 13 7 21" />
                 <polyline points="7 3 7 8 15 8" />
-              </svg></span><strong>Storage</strong><span>~200 MB free disk space</span></div>
+              </svg></span><strong>Storage</strong><span>~150 MB free disk space</span></div>
           <div class="req-card"><span class="req-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="22" />
-                <line x1="8" y1="22" x2="16" y2="22" />
-              </svg></span><strong>Microphone</strong><span>Any built-in or external mic</span></div>
+                <line x1="12" y1="19" x2="12" y2="22" /><line x1="8" y1="22" x2="16" y2="22" />
+              </svg></span><strong>Audio</strong><span>Any built-in or external microphone</span></div>
           <div class="req-card"><span class="req-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 <path d="M2 12h20" />
-              </svg></span><strong>Internet</strong><span>For Gemini AI</span></div>
+              </svg></span><strong>Connectivity</strong><span>Required for Gemini &amp; Sarvam APIs</span></div>
           <div class="req-card"><span class="req-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path
                   d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-              </svg></span><strong>Runtime</strong><span>Node.js bundled — nothing extra to install</span></div>
+              </svg></span><strong>Runtime</strong><span>Native Electron &amp; Node.js bundle</span></div>
+          <div class="req-card"><span class="req-ico"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polygon points="10 8 16 12 10 16 10 8" />
+              </svg></span><strong>Display</strong><span>Multi-monitor &amp; high-DPI scaling support</span></div>
         </div>
 
         <!-- Quick install steps -->
@@ -433,8 +620,8 @@
           <div class="if-step">
             <div class="if-num">1</div>
             <div class="if-body">
-              <strong>Download</strong>
-              <span>Save <code>Pointly-Setup.exe</code> from the button below</span>
+              <strong>Download Setup</strong>
+              <span>Save <code>Pointly-Setup.exe</code></span>
             </div>
           </div>
           <div class="if-arrow" aria-hidden="true">→</div>
@@ -442,15 +629,15 @@
             <div class="if-num">2</div>
             <div class="if-body">
               <strong>Run Installer</strong>
-              <span>Double-click and complete the 2-step wizard</span>
+              <span>Instant zero-configuration setup</span>
             </div>
           </div>
           <div class="if-arrow" aria-hidden="true">→</div>
           <div class="if-step">
             <div class="if-num">3</div>
             <div class="if-body">
-              <strong>Launch &amp; Interact</strong>
-              <span>Pointly opens and is immediately ready</span>
+              <strong>Hold Ctrl+Space</strong>
+              <span>Speak commands and enjoy effortless flow</span>
             </div>
           </div>
         </div>
@@ -465,29 +652,26 @@
     <section id="about" class="section--alt" aria-labelledby="about-h">
       <div class="section-container section-container--narrow">
 
-        <p class="eyebrow">ABOUT</p>
+        <p class="eyebrow">THE PHILOSOPHY</p>
         <h2 id="about-h">
-          Why we built<br>
+          Why we created<br>
           <em>Pointly.</em>
         </h2>
 
         <p class="about-para">
-          Billions of people use computers every day — yet the interface has barely changed in 40 years.
-          Keyboards and mouse still dominate, locking out millions of users with motor disabilities, speech
-          impairments, or language barriers.
+          Traditional AI assistants force you to break your workflow by opening huge, intrusive windows that obscure your active documents and disrupt deep focus.
         </p>
         <p class="about-para">
-          Pointly is our answer. An AI assistant that meets you wherever you are — through voice
-          or text — in your language, on your terms. We believe human-computer interaction
-          should be as natural as a conversation.
+          We built Pointly with an uncompromising SaaS principle: <strong>zero friction, zero screen clutter, and instant ambient action.</strong> Pointly floats quietly beside your cursor with 100% click pass-through. When you need it, push-to-talk voice commands and intelligent step-by-step UI pointing guide you through any software seamlessly.
         </p>
 
         <div class="about-chips">
-          <span class="chip">SaaS for general purposes</span>
+          <span class="chip">Ambient Desktop Agent</span>
+          <span class="chip">100% Click Pass-Through</span>
           <span class="chip">Built on Electron</span>
-          <span class="chip">Powered by Gemini AI</span>
-          <span class="chip">Sarvam LLM</span>
-          <span class="chip">Windows Native</span>
+          <span class="chip">Powered by Google Gemini</span>
+          <span class="chip">Sarvam Voice Engine</span>
+          <span class="chip">By Team XOR</span>
         </div>
 
       </div>
@@ -502,8 +686,8 @@
         <div class="cta-glow" aria-hidden="true"></div>
 
         <p class="eyebrow eyebrow--c">GET STARTED — FREE</p>
-        <h2 id="dl-h" class="cta-h2">Ready to go hands-free?</h2>
-        <p class="cta-sub">Free. Login required to download. No subscription. Just run.</p>
+        <h2 id="dl-h" class="cta-h2">Upgrade your desktop flow today.</h2>
+        <p class="cta-sub">Free for Windows. Push-to-talk, UI pointing, and 100% click pass-through.</p>
 
         <a href="downloads/Pointly-Setup.exe" class="btn btn--primary btn--2xl" id="cta-dl-btn" download>
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
@@ -521,51 +705,88 @@
         </p>
 
         <div class="cta-modes">
-          <span class="cta-mode-label">Works with:</span>
-          <span class="cta-mode-tag"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="22" />
-              <line x1="8" y1="22" x2="16" y2="22" />
-            </svg> Voice</span>
-          <span class="cta-mode-tag"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
-              <path d="M6 8h.001" />
-              <path d="M10 8h.001" />
-              <path d="M14 8h.001" />
-              <path d="M18 8h.001" />
-              <path d="M8 12h.001" />
-              <path d="M12 12h.001" />
-              <path d="M16 12h.001" />
-              <path d="M7 16h10" />
-            </svg> Text Chat</span>
+          <span class="cta-mode-label">Core Capabilities:</span>
+          <span class="cta-mode-tag">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            Ambient Co-pilot
+          </span>
+          <span class="cta-mode-tag">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            100% Click Pass-Through
+          </span>
+          <span class="cta-mode-tag">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+            Push-to-Talk (Ctrl+Space)
+          </span>
+          <span class="cta-mode-tag">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+            Guided App Workflows
+          </span>
+          <span class="cta-mode-tag">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.001"/><path d="M10 8h.001"/><path d="M14 8h.001"/><path d="M18 8h.001"/><path d="M8 12h.001"/><path d="M12 12h.001"/><path d="M16 12h.001"/><path d="M7 16h10"/></svg>
+            Typing Capsule (Ctrl+T)
+          </span>
         </div>
 
       </div>
     </section><!-- /#download -->
 
     <!-- ═══════════════════════════════════════════════════
-     LOGIN MODAL
+     FIREBASE AUTH SIGN IN MODAL
 ═══════════════════════════════════════════════════ -->
     <div id="login-modal" class="modal" aria-hidden="true">
       <div class="modal-overlay" id="modal-overlay"></div>
       <div class="modal-content">
         <button class="modal-close" id="modal-close" aria-label="Close modal">×</button>
-        <h3>Login to Download</h3>
-        <p>Please log in to your account to download Pointly.</p>
-        <form id="login-form">
-          <div class="input-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" required placeholder="Enter username" />
+        
+        <!-- Unauthenticated Form View -->
+        <div id="auth-form-view">
+          <h3>Sign in to Pointly</h3>
+          <p>Sync your companion settings and access downloads.</p>
+
+          <div id="auth-error-msg" class="auth-error" style="display: none;"></div>
+
+          <!-- Firebase Google Sign In Button -->
+          <button type="button" id="google-signin-btn" class="btn btn--google btn--full">
+            <svg class="google-icon" width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <div class="modal-divider">
+            <span>or continue with email</span>
           </div>
-          <div class="input-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" required placeholder="Enter password" />
+
+          <form id="login-form">
+            <div class="input-group">
+              <label for="username">Email Address</label>
+              <input type="email" id="username" required placeholder="name@company.com" />
+            </div>
+            <div class="input-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" required placeholder="Enter password" />
+            </div>
+            <button type="submit" class="btn btn--primary btn--full" id="email-submit-btn">Continue</button>
+          </form>
+        </div>
+
+        <!-- Authenticated Profile View -->
+        <div id="auth-user-view" style="display: none;">
+          <div class="user-card-modal">
+            <img id="modal-user-avatar" class="user-avatar-lg" src="" alt="Profile Avatar" />
+            <h3 id="modal-user-name">User Name</h3>
+            <p id="modal-user-email" class="modal-user-email">user@domain.com</p>
+            <div class="user-status-pill">
+              <span class="status-dot"></span> Firebase Authenticated
+            </div>
           </div>
-          <button type="submit" class="btn btn--primary btn--full">Login</button>
-        </form>
+          <button type="button" id="modal-signout-btn" class="btn btn--ghost btn--full">Sign Out</button>
+        </div>
+
       </div>
     </div>
 
@@ -578,21 +799,33 @@
   <footer id="site-footer" role="contentinfo">
     <div class="footer-inner">
       <div class="footer-brand">
-        <span class="logo-star">✦</span>
+        <span class="logo-buddy-orb">
+          <span class="mini-orb-eye"></span>
+          <span class="mini-orb-eye"></span>
+        </span>
         <span class="logo-name">Pointly</span>
-        <span class="footer-tag">— Inclusive AI Assistant</span>
+        <span class="footer-tag">— Ambient Desktop AI</span>
       </div>
       <nav class="footer-nav" aria-label="Footer links">
         <a href="#features">Features</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#install">Install</a>
+        <a href="#demo">Live Demo</a>
+        <a href="#how-it-works">Workflows</a>
+        <a href="#install">Requirements</a>
         <a href="#about">About</a>
         <a href="downloads/Pointly-Setup.exe" download>Download</a>
       </nav>
-      <p class="footer-copy">© 2026 Pointly. Built for focus. Built for everyone.</p>
+      <p class="footer-copy">
+        © 2026 Pointly. Crafted by 
+        <span class="footer-contrib">Team XOR</span>. 
+        Built for focus. Built for everyone.
+      </p>
     </div>
   </footer>
 
+  <!-- Firebase App & Auth SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <script src="app.js"></script>
 </body>
 
