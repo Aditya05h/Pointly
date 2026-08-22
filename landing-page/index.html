@@ -1,2 +1,533 @@
-<!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Pointly — your quiet co-pilot</title><link rel="stylesheet" href="style.css"></head><body><main><nav><div class="logo"><b>+</b> pointly</div><span>DESKTOP ASSISTANT / WINDOWS</span></nav><section><p class="kicker">LESS FRICTION. MORE FLOW.</p><h1>Your quiet<br><i>co-pilot.</i></h1><p>Pointly sees the context, hears the question, and helps you move through the next step.</p><a href="downloads/Pointly-Setup.exe" class="download">Download for Windows <b>↗</b></a></section><footer><span>POINTLY / 2026</span><span>BUILT FOR FOCUS</span></footer></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pointly — AI Voice, Sign & Gesture Assistant for Windows</title>
+    <meta name="description"
+        content="Pointly is a next-generation inclusive AI assistant. Control your PC hands-free with voice, sign language, air-cursor gestures, and text — in 50+ languages. Free for Windows." />
+    <meta name="keywords"
+        content="Pointly, AI assistant, voice control, sign language, air cursor, gesture control, accessibility, Windows, multilingual, hands-free, Gemini AI" />
+    <meta name="theme-color" content="#080808" />
+    <meta property="og:title" content="Pointly — Inclusive AI Assistant" />
+    <meta property="og:description" content="Voice. Sign. Gesture. Text. Next-gen multimodal AI for Windows." />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════════════════════════
+     CUSTOM CURSOR
+═══════════════════════════════════════════════════ -->
+    <div id="cursor-dot" aria-hidden="true"></div>
+    <div id="cursor-ring" aria-hidden="true"></div>
+
+    <!-- ═══════════════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════════════ -->
+    <header id="site-header">
+        <nav id="navbar" aria-label="Primary navigation">
+            <div class="nav-container">
+
+                <a href="#" class="nav-logo" aria-label="Pointly — go to top">
+                    <span class="logo-star">✦</span>
+                    <span class="logo-name">Pointly</span>
+                </a>
+
+                <ul class="nav-menu" role="list">
+                    <li><a href="#features" class="nav-link">Features</a></li>
+                    <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+                    <li><a href="#install" class="nav-link">Install</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                    <li><a href="#" class="nav-link" id="nav-login-btn">Login</a></li>
+                </ul>
+
+                <a href="downloads/Pointly-Setup.exe" class="btn btn--primary btn--sm" id="nav-dl-btn" download>
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                        <path d="M6.5 1v8M3.5 6.5l3 3 3-3M1.5 11.5h10" stroke="currentColor" stroke-width="1.7"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Download
+                </a>
+
+                <button class="nav-toggle" id="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false"
+                    aria-controls="nav-drawer">
+                    <span></span>
+                    <span></span>
+                </button>
+
+            </div><!-- /.nav-container -->
+
+            <!-- Mobile Drawer -->
+            <div class="nav-drawer" id="nav-drawer" aria-hidden="true">
+                <a href="#features" class="drawer-link">Features</a>
+                <a href="#how-it-works" class="drawer-link">How It Works</a>
+                <a href="#install" class="drawer-link">Install</a>
+                <a href="#about" class="drawer-link">About</a>
+                <a href="downloads/Pointly-Setup.exe" class="btn btn--primary drawer-dl" download>
+                    Download for Windows
+                </a>
+            </div>
+
+        </nav>
+    </header><!-- /#site-header -->
+
+
+    <main id="main">
+
+        <!-- ═══════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════ -->
+        <section id="hero" aria-label="Hero section">
+
+            <!-- background decoration -->
+            <div class="hero-grid" aria-hidden="true"></div>
+            <div class="hero-blob b1" aria-hidden="true"></div>
+            <div class="hero-blob b2" aria-hidden="true"></div>
+
+            <div class="hero-inner">
+
+                <!-- ── Left Copy ── -->
+                <div class="hero-copy">
+
+                    <div class="hero-badge">
+                        <span class="badge-dot"></span>
+                        Next-Gen Multimodal AI &nbsp;·&nbsp; Windows
+                    </div>
+
+                    <h1>
+                        Your voice.<br>
+                        Your hands.<br>
+                        <em>Your assistant.</em>
+                    </h1>
+
+                    <p class="hero-desc">
+                        Pointly is an <strong>inclusive AI assistant</strong> that understands
+                        <strong>voice commands</strong>, <strong>sign language</strong>,
+                        <strong>air-cursor gestures</strong>, and <strong>typed text</strong>
+                        — in 50+ languages, on your Windows desktop.
+                    </p>
+
+                    <!-- ── MAIN DOWNLOAD CTA — centred visually in hero ── -->
+                    <div class="hero-cta">
+                        <a href="downloads/Pointly-Setup.exe" class="btn btn--primary btn--xl" id="hero-dl-btn"
+                            download>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path d="M10 2v12M5 9.5L10 14.5l5-5M2 17h16" stroke="currentColor" stroke-width="2.2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Download for Windows
+                        </a>
+                        <a href="#how-it-works" class="btn btn--ghost btn--xl">
+                            See How It Works
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <path d="M2.5 7h9M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.6"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </a>
+                    </div>
+
+                    <p class="hero-fine">Free &nbsp;·&nbsp; Windows 10 / 11 &nbsp;·&nbsp; Account required to download
+                    </p>
+
+                </div><!-- /.hero-copy -->
+
+                <!-- ── Right: Animated App Mockup ── -->
+                <div class="hero-mockup" aria-hidden="true">
+                    <div class="mockup-window">
+                        <div class="mock-bar">
+                            <span class="mock-dot rd"></span>
+                            <span class="mock-dot yw"></span>
+                            <span class="mock-dot gn"></span>
+                            <span class="mock-app-name">Pointly</span>
+                            <span class="mock-mode">● VOICE</span>
+                        </div>
+                        <div class="mock-body">
+                            <!-- live waveform -->
+                            <div class="waveform">
+                                <span></span><span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span></span>
+                            </div>
+                            <!-- chat -->
+                            <div class="chat">
+                                <div class="bubble bubble--ai">
+                                    <span class="bubble-ava">✦</span>
+                                    <p>Hello! I'm listening. How can I help?</p>
+                                </div>
+                                <div class="bubble bubble--user">
+                                    <p>Summarise my last document.</p>
+                                </div>
+                                <div class="bubble bubble--ai">
+                                    <span class="bubble-ava">✦</span>
+                                    <p class="typing-dots"><span></span><span></span><span></span></p>
+                                </div>
+                            </div>
+                            <!-- input -->
+                            <div class="mock-input">
+                                <span class="mock-mic">🎤</span>
+                                <span class="mock-placeholder">Say something or type…</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- floating mode pills -->
+                    <div class="mode-pill pill-v">🎙 Voice</div>
+                    <div class="mode-pill pill-s">🤟 Sign</div>
+                    <div class="mode-pill pill-g">✋ Gesture</div>
+                </div><!-- /.hero-mockup -->
+
+            </div><!-- /.hero-inner -->
+        </section><!-- /#hero -->
+
+
+        <!-- ═══════════════════════════════════════════════════
+     STAT RIBBON
+═══════════════════════════════════════════════════ -->
+        <div class="stat-ribbon" role="region" aria-label="Statistics">
+            <div class="stat-ribbon-inner">
+                <div class="stat-item">
+                    <span class="stat-num">4+</span>
+                    <span class="stat-lbl">Interaction Modes</span>
+                </div>
+                <span class="stat-divider" aria-hidden="true">|</span>
+                <div class="stat-item">
+                    <span class="stat-num">50+</span>
+                    <span class="stat-lbl">Languages Supported</span>
+                </div>
+                <span class="stat-divider" aria-hidden="true">|</span>
+                <div class="stat-item">
+                    <span class="stat-num">&lt;1min</span>
+                    <span class="stat-lbl">Setup Time</span>
+                </div>
+                <span class="stat-divider" aria-hidden="true">|</span>
+                <div class="stat-item">
+                    <span class="stat-num">100%</span>
+                    <span class="stat-lbl">Local AI Processing</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ═══════════════════════════════════════════════════
+     FEATURES
+═══════════════════════════════════════════════════ -->
+        <section id="features" aria-labelledby="feat-h">
+            <div class="section-container">
+
+                <p class="eyebrow">CAPABILITIES</p>
+                <h2 id="feat-h">
+                    Every way you communicate,<br>
+                    <em>Pointly understands.</em>
+                </h2>
+                <p class="section-sub">
+                    Designed to remove friction — whether you use your voice, hands, eyes, or keyboard.
+                </p>
+
+                <div class="feat-grid">
+
+                    <article class="feat-card feat-card--hl" tabindex="0">
+                        <div class="feat-ico">🎙️</div>
+                        <h3>Voice Interaction</h3>
+                        <p>Speak naturally in any language. Pointly transcribes in real-time, understands intent, and
+                            executes — open apps, search the web, write emails, all without touching a keyboard.</p>
+                        <span class="feat-pill">Real-time · Multilingual</span>
+                    </article>
+
+                    <article class="feat-card" tabindex="0">
+                        <div class="feat-ico">🤟</div>
+                        <h3>Sign Language Recognition</h3>
+                        <p>Your webcam becomes a bridge. Pointly reads ASL and ISL gestures live, converting them to
+                            text and desktop actions with zero extra hardware.</p>
+                        <span class="feat-pill">ASL · ISL · Camera-based</span>
+                    </article>
+
+                    <article class="feat-card" tabindex="0">
+                        <div class="feat-ico">✋</div>
+                        <h3>Air-Cursor Control</h3>
+                        <p>Control your entire screen by moving your hand in the air. Point, click, scroll, and draw —
+                            no mouse, no trackpad, just your hand and the camera.</p>
+                        <span class="feat-pill">Gesture · Dwell Click</span>
+                    </article>
+
+                    <article class="feat-card" tabindex="0">
+                        <div class="feat-ico">🌐</div>
+                        <h3>Multilingual AI</h3>
+                        <p>Hindi, Tamil, Arabic, Spanish, Mandarin and 50+ more. Pointly replies fluently in your
+                            language, powered by Google Gemini AI at its core.</p>
+                        <span class="feat-pill">50+ Languages · Gemini</span>
+                    </article>
+
+                    <article class="feat-card" tabindex="0">
+                        <div class="feat-ico">⌨️</div>
+                        <h3>Floating Chat Interface</h3>
+                        <p>Prefer typing? The always-on-top overlay chat lets you ask questions and control your PC
+                            without leaving your current app or breaking your flow.</p>
+                        <span class="feat-pill">Overlay · Always on Top</span>
+                    </article>
+
+                    <article class="feat-card" tabindex="0">
+                        <div class="feat-ico">♿</div>
+                        <h3>Accessibility First</h3>
+                        <p>Built for users with motor disabilities, speech impairments, and language barriers. No
+                            friction, no barriers — just seamless, truly inclusive HCI.</p>
+                        <span class="feat-pill">Inclusive · WCAG-aligned</span>
+                    </article>
+
+                </div><!-- /.feat-grid -->
+            </div>
+        </section><!-- /#features -->
+
+
+        <!-- ═══════════════════════════════════════════════════
+     HOW IT WORKS
+═══════════════════════════════════════════════════ -->
+        <section id="how-it-works" class="section--alt" aria-labelledby="hiw-h">
+            <div class="section-container">
+
+                <p class="eyebrow">PROCESS</p>
+                <h2 id="hiw-h">
+                    Up and running<br>
+                    <em>in four steps.</em>
+                </h2>
+
+                <div class="steps-list">
+
+                    <div class="step" tabindex="0">
+                        <div class="step-no">01</div>
+                        <div class="step-content">
+                            <h3>Download &amp; Install</h3>
+                            <p>Click <strong>Download for Windows</strong>. Run <code>Pointly-Setup.exe</code> and
+                                follow the 2-step wizard. No admin rights needed for basic use. Takes under a minute.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step" tabindex="0">
+                        <div class="step-no">02</div>
+                        <div class="step-content">
+                            <h3>Grant Permissions</h3>
+                            <p>Allow <strong>microphone</strong> access for voice, and <strong>webcam</strong> access
+                                for sign language and air-cursor modes. All processing runs locally — nothing leaves
+                                your device.</p>
+                        </div>
+                    </div>
+
+                    <div class="step" tabindex="0">
+                        <div class="step-no">03</div>
+                        <div class="step-content">
+                            <h3>Choose Your Mode</h3>
+                            <p>Pick <strong>Voice</strong>, <strong>Sign</strong>, <strong>Air-Cursor</strong>, or
+                                <strong>Text</strong> from the system tray. You can switch modes at any time — even
+                                mid-conversation.</p>
+                        </div>
+                    </div>
+
+                    <div class="step" tabindex="0">
+                        <div class="step-no">04</div>
+                        <div class="step-content">
+                            <h3>Start Interacting</h3>
+                            <p>Pointly lives quietly in your tray. Wake it with <code>Ctrl+Shift+P</code>, a hand
+                                gesture, or just say <em>"Hey Pointly"</em>. It's always ready when you are.</p>
+                        </div>
+                    </div>
+
+                </div><!-- /.steps-list -->
+            </div>
+        </section><!-- /#how-it-works -->
+
+
+        <!-- ═══════════════════════════════════════════════════
+     INSTALL / SYSTEM REQUIREMENTS
+═══════════════════════════════════════════════════ -->
+        <section id="install" aria-labelledby="req-h">
+            <div class="section-container">
+
+                <p class="eyebrow">SYSTEM REQUIREMENTS</p>
+                <h2 id="req-h">
+                    Built for<br>
+                    <em>modern Windows.</em>
+                </h2>
+                <p class="section-sub">
+                    Lightweight and optimised. Most modern Windows laptops and desktops run Pointly without any issues.
+                </p>
+
+                <div class="req-grid">
+                    <div class="req-card"><span class="req-ico">🖥️</span><strong>OS</strong><span>Windows 10 (1903+) or
+                            Windows 11</span></div>
+                    <div class="req-card"><span class="req-ico">⚡</span><strong>Processor</strong><span>Intel i5 / AMD
+                            Ryzen 5 or better</span></div>
+                    <div class="req-card"><span class="req-ico">🧠</span><strong>RAM</strong><span>8 GB min — 16 GB
+                            recommended</span></div>
+                    <div class="req-card"><span class="req-ico">💾</span><strong>Storage</strong><span>~200 MB free disk
+                            space</span></div>
+                    <div class="req-card"><span class="req-ico">📷</span><strong>Camera</strong><span>720p+ webcam (sign
+                            &amp; gesture)</span></div>
+                    <div class="req-card"><span class="req-ico">🎤</span><strong>Microphone</strong><span>Any built-in
+                            or external mic</span></div>
+                    <div class="req-card"><span class="req-ico">🌐</span><strong>Internet</strong><span>For Gemini AI —
+                            gestures work offline</span></div>
+                    <div class="req-card"><span class="req-ico">🔧</span><strong>Runtime</strong><span>Node.js bundled —
+                            nothing extra to install</span></div>
+                </div>
+
+                <!-- Quick install steps -->
+                <div class="install-flow">
+                    <div class="if-step">
+                        <div class="if-num">1</div>
+                        <div class="if-body">
+                            <strong>Download</strong>
+                            <span>Save <code>Pointly-Setup.exe</code> from the button below</span>
+                        </div>
+                    </div>
+                    <div class="if-arrow" aria-hidden="true">→</div>
+                    <div class="if-step">
+                        <div class="if-num">2</div>
+                        <div class="if-body">
+                            <strong>Run Installer</strong>
+                            <span>Double-click and complete the 2-step wizard</span>
+                        </div>
+                    </div>
+                    <div class="if-arrow" aria-hidden="true">→</div>
+                    <div class="if-step">
+                        <div class="if-num">3</div>
+                        <div class="if-body">
+                            <strong>Launch &amp; Interact</strong>
+                            <span>Pointly opens and is immediately ready</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section><!-- /#install -->
+
+
+        <!-- ═══════════════════════════════════════════════════
+     ABOUT
+═══════════════════════════════════════════════════ -->
+        <section id="about" class="section--alt" aria-labelledby="about-h">
+            <div class="section-container section-container--narrow">
+
+                <p class="eyebrow">ABOUT</p>
+                <h2 id="about-h">
+                    Why we built<br>
+                    <em>Pointly.</em>
+                </h2>
+
+                <p class="about-para">
+                    Billions of people use computers every day — yet the interface has barely changed in 40 years.
+                    Keyboards and mice still dominate, locking out millions of users with motor disabilities, speech
+                    impairments, or language barriers.
+                </p>
+                <p class="about-para">
+                    Pointly is our answer. An AI assistant that meets you wherever you are — through voice, sign,
+                    gesture, or text — in your language, on your terms. We believe human-computer interaction
+                    should be as natural as a conversation.
+                </p>
+
+                <div class="about-chips">
+                    <span class="chip">Open Source (MIT)</span>
+                    <span class="chip">Built on Electron</span>
+                    <span class="chip">Powered by Gemini AI</span>
+                    <span class="chip">MediaPipe Vision</span>
+                    <span class="chip">Windows Native</span>
+                </div>
+
+            </div>
+        </section><!-- /#about -->
+
+
+        <!-- ═══════════════════════════════════════════════════
+     DOWNLOAD CTA
+═══════════════════════════════════════════════════ -->
+        <section id="download" aria-labelledby="dl-h">
+            <div class="cta-container">
+                <div class="cta-glow" aria-hidden="true"></div>
+
+                <p class="eyebrow eyebrow--c">GET STARTED — FREE</p>
+                <h2 id="dl-h" class="cta-h2">Ready to go hands-free?</h2>
+                <p class="cta-sub">Free. Login required to download. No subscription. Just run.</p>
+
+                <a href="downloads/Pointly-Setup.exe" class="btn btn--primary btn--2xl" id="cta-dl-btn" download>
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                        <path d="M11 2v14M5.5 11l5.5 5.5L16.5 11M2 19h18" stroke="currentColor" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Download for Windows
+                </a>
+
+                <p class="cta-meta">
+                    <code>Pointly-Setup.exe</code>
+                    &nbsp;·&nbsp; ~85 MB
+                    &nbsp;·&nbsp; v0.1.0
+                    &nbsp;·&nbsp; Windows 10/11 (64-bit)
+                </p>
+
+                <div class="cta-modes">
+                    <span class="cta-mode-label">Works with:</span>
+                    <span class="cta-mode-tag">🎙 Voice</span>
+                    <span class="cta-mode-tag">🤟 Sign Language</span>
+                    <span class="cta-mode-tag">✋ Air Cursor</span>
+                    <span class="cta-mode-tag">⌨️ Text Chat</span>
+                </div>
+
+            </div>
+        </section><!-- /#download -->
+
+        <!-- ═══════════════════════════════════════════════════
+     LOGIN MODAL
+═══════════════════════════════════════════════════ -->
+        <div id="login-modal" class="modal" aria-hidden="true">
+            <div class="modal-overlay" id="modal-overlay"></div>
+            <div class="modal-content">
+                <button class="modal-close" id="modal-close" aria-label="Close modal">×</button>
+                <h3>Login to Download</h3>
+                <p>Please log in to your account to download Pointly.</p>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required placeholder="Enter username" />
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required placeholder="Enter password" />
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full">Login</button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- ═══════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════ -->
+    <footer id="site-footer" role="contentinfo">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="logo-star">✦</span>
+                <span class="logo-name">Pointly</span>
+                <span class="footer-tag">— Inclusive AI Assistant</span>
+            </div>
+            <nav class="footer-nav" aria-label="Footer links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#install">Install</a>
+                <a href="#about">About</a>
+                <a href="downloads/Pointly-Setup.exe" download>Download</a>
+            </nav>
+            <p class="footer-copy">© 2026 Pointly. Built for focus. Built for everyone.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
