@@ -1,9 +1,11 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, clipboard } = require('electron');
 const { getSettings, saveSettings } = require('../store/settings');
 const { askGemini } = require('../ai/gemini');
 const { textToSpeech, transcribeAudio } = require('../ai/sarvam');
 const { findDesktopItem, captureDesktopScreen } = require('../assist/desktopAnalyzer');
 const { handleOsCommand } = require('../assist/osController');
+const { isDraftWorkflow, generateWordWorkflow } = require('../assist/workflowGuide');
+const { isBrowserNavigation, handleBrowserCommand } = require('../assist/browserController');
 const { saveMemory, getMemories, saveScreenshotBuffer } = require('../store/memoryStore');
 const { glideCompanionTo, setTypingMode } = require('../windows/cursorOverlay');
 
@@ -43,7 +45,15 @@ function registerIpcHandlers({ getChatWindow, getOverlayWindow }) {
 
   ipcMain.handle('memory:get-history', () => getMemories());
 
-  // Companion Command Processor (Handles OS Actions, Desktop Search, and AI)
+  ipcMain.on('clipboard:write', (_, text) => {
+    try {
+      clipboard.writeText(text || '');
+    } catch (e) {
+      console.error('Clipboard write error:', e);
+    }
+  });
+
+  // Companion Command Processor (Handles Web/Chrome, Word Workflows, OS Actions, Desktop Search, and AI)
   ipcMain.handle('companion:execute-command', async (_, commandText, options = {}) => {
     const text = (commandText || '').trim();
     if (!text) return { error: 'Empty command' };
@@ -56,7 +66,35 @@ function registerIpcHandlers({ getChatWindow, getOverlayWindow }) {
       }
     } catch (_) {}
 
-    // 1. Check for Operating System / Window Actions (minimize, maximize, close, open apps, etc.)
+    // 1. Check for Chrome & Webpage Navigation (e.g. "search AI news on Chrome", "open youtube", "scroll down")
+    if (isBrowserNavigation(text)) {
+      const browserResult = await handleBrowserCommand(text);
+      if (browserResult) {
+        saveMemory({
+          userPrompt: text,
+          response: browserResult.message,
+          action: browserResult.action || 'browser_navigation',
+          source: options.source || 'companion',
+          screenshotFile: screenshotSaved?.filename
+        });
+        return browserResult;
+      }
+    }
+
+    // 2. Check for Guided Application Workflow (e.g. "Draft me a mail body in Word")
+    if (isDraftWorkflow(text)) {
+      const workflowResult = await generateWordWorkflow(text);
+      saveMemory({
+        userPrompt: text,
+        response: workflowResult.message,
+        action: 'guided_workflow',
+        source: options.source || 'companion',
+        screenshotFile: screenshotSaved?.filename
+      });
+      return workflowResult;
+    }
+
+    // 3. Check for Operating System / Window Actions (minimize, maximize, close, open apps, etc.)
     const osResult = await handleOsCommand(text);
     if (osResult) {
       saveMemory({
@@ -70,7 +108,7 @@ function registerIpcHandlers({ getChatWindow, getOverlayWindow }) {
       return osResult;
     }
 
-    // 2. Check for Desktop File/Folder Search (locate names.txt, etc.)
+    // 4. Check for Desktop File/Folder Search (locate names.txt, etc.)
     const isDesktopSearch = /(locate|find|where is|search for|open|show me|look for)\b.*(file|folder|desktop|\.txt|\.pdf|\.doc|\.png|\.jpg|\.csv|\.xlsx|\.zip|\.mp4|\bnames\b)/i.test(text) ||
                             /(locate|find|where is)\b/i.test(text);
 
@@ -116,7 +154,7 @@ function registerIpcHandlers({ getChatWindow, getOverlayWindow }) {
       }
     }
 
-    // 3. General Conversation & Knowledge Inquiries via Gemini
+    // 5. General Conversation & Knowledge Inquiries via Gemini
     const aiAnswer = await askGemini(text);
     saveMemory({
       userPrompt: text,

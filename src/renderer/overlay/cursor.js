@@ -3,6 +3,10 @@ const buddyContainer = document.getElementById('buddy-container');
 const buddyOrb = document.getElementById('buddy-orb');
 const speechBubble = document.getElementById('speech-bubble');
 const bubbleContent = document.getElementById('bubble-content');
+const workflowControls = document.getElementById('workflow-controls');
+const stepIndicator = document.getElementById('step-indicator');
+const btnCopyDraft = document.getElementById('btn-copy-draft');
+const btnNextStep = document.getElementById('btn-next-step');
 const typeCapsule = document.getElementById('type-capsule');
 const capsuleInput = document.getElementById('capsule-input');
 const spotlightBeacon = document.getElementById('spotlight-beacon');
@@ -19,6 +23,11 @@ let userSpeaker = 'shubh';
 let userLang = 'en-IN';
 let bubbleDismissTimer = null;
 
+// Guided Workflow State
+let currentWorkflow = null;
+let currentStepIndex = 0;
+let currentDraftText = '';
+
 // Initialize user voice preferences
 if (window.pointlyCompanion?.getSettings) {
   window.pointlyCompanion.getSettings().then((settings) => {
@@ -29,13 +38,13 @@ if (window.pointlyCompanion?.getSettings) {
   });
 }
 
-// Mouse Event Pass-Through Management
+// Mouse Pass-Through Management
 buddyContainer.addEventListener('mouseenter', () => {
   window.pointlyCompanion?.setIgnoreMouseEvents(false);
 });
 
 buddyContainer.addEventListener('mouseleave', () => {
-  if (isTypingActive || isRecording) return;
+  if (isTypingActive || isRecording || currentWorkflow) return;
   window.pointlyCompanion?.setIgnoreMouseEvents(true, { forward: true });
 });
 
@@ -48,6 +57,25 @@ typeCapsule.addEventListener('mouseleave', () => {
   if (!isTypingActive) {
     window.pointlyCompanion?.setIgnoreMouseEvents(true, { forward: true });
   }
+});
+
+speechBubble.addEventListener('mouseenter', () => {
+  window.pointlyCompanion?.setIgnoreMouseEvents(false);
+});
+
+speechBubble.addEventListener('mouseleave', () => {
+  if (isTypingActive || isRecording) return;
+  if (!currentWorkflow) {
+    window.pointlyCompanion?.setIgnoreMouseEvents(true, { forward: true });
+  }
+});
+
+capsuleInput.addEventListener('blur', () => {
+  setTimeout(() => {
+    if (!isRecording && !typeCapsule.classList.contains('visible') && !currentWorkflow) {
+      window.pointlyCompanion?.setIgnoreMouseEvents(true, { forward: true });
+    }
+  }, 150);
 });
 
 // UI State Management
@@ -72,7 +100,7 @@ function showSpeechBubble(text, html = false, autoDismissDelay = 5000) {
 
   speechBubble.classList.add('visible');
 
-  if (autoDismissDelay > 0) {
+  if (autoDismissDelay > 0 && !currentWorkflow) {
     bubbleDismissTimer = setTimeout(() => {
       speechBubble.classList.remove('visible');
       bubbleDismissTimer = null;
@@ -86,13 +114,14 @@ function hideSpeechBubble() {
     bubbleDismissTimer = null;
   }
   speechBubble.classList.remove('visible');
+  if (workflowControls) workflowControls.classList.remove('active');
+  currentWorkflow = null;
 }
 
 // Typing Capsule Controls
 function openTypingCapsule() {
   isTypingActive = true;
   typeCapsule.classList.add('visible');
-  // Lock companion window position so it stays in place while user types
   window.pointlyCompanion?.setTypingMode(true);
   window.pointlyCompanion?.setIgnoreMouseEvents(false);
 
@@ -106,9 +135,10 @@ function closeTypingCapsule() {
   isTypingActive = false;
   typeCapsule.classList.remove('visible');
   capsuleInput.blur();
-  // Resume following mouse
   window.pointlyCompanion?.setTypingMode(false);
-  window.pointlyCompanion?.setIgnoreMouseEvents(true, { forward: true });
+  if (!currentWorkflow) {
+    window.pointlyCompanion?.setIgnoreMouseEvents(true, { forward: true });
+  }
 }
 
 function toggleTypingCapsule() {
@@ -135,8 +165,8 @@ function encodeWav(samples, sampleRate = 16000) {
   writeString(8, 'WAVE');
   writeString(12, 'fmt ');
   view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // Mono
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
   view.setUint32(24, sampleRate, true);
   view.setUint32(28, sampleRate * 2, true);
   view.setUint16(32, 2, true);
@@ -282,8 +312,8 @@ function endVoiceSession() {
     currentAudioPlayer = null;
   }
 
+  hideSpeechBubble();
   setBuddyState('idle');
-  showSpeechBubble('Voice session ended.', false, 2000);
 }
 
 // Play Sarvam TTS Voice Response
@@ -315,24 +345,57 @@ async function playVoiceResponse(text) {
     audio.onended = () => {
       setBuddyState('idle');
       currentAudioPlayer = null;
-      setTimeout(() => hideSpeechBubble(), 4000);
+      if (!currentWorkflow) {
+        setTimeout(() => hideSpeechBubble(), 4000);
+      }
     };
 
     audio.onerror = () => {
       setBuddyState('idle');
       currentAudioPlayer = null;
-      setTimeout(() => hideSpeechBubble(), 4000);
+      if (!currentWorkflow) {
+        setTimeout(() => hideSpeechBubble(), 4000);
+      }
     };
 
     await audio.play();
   } catch (err) {
     console.error('TTS playback error:', err);
     setBuddyState('idle');
-    setTimeout(() => hideSpeechBubble(), 4000);
   }
 }
 
-// Execute Task (Desktop file search, OS window control, or Gemini inquiry)
+// Play Guided Workflow Step
+async function playWorkflowStep(stepIndex) {
+  if (!currentWorkflow || !currentWorkflow.steps || stepIndex >= currentWorkflow.steps.length) {
+    if (workflowControls) workflowControls.classList.remove('active');
+    currentWorkflow = null;
+    showSpeechBubble('Workflow complete! Your draft is ready in Word.', false, 4000);
+    return;
+  }
+
+  currentStepIndex = stepIndex;
+  const step = currentWorkflow.steps[stepIndex];
+
+  // Update UI Step controls
+  workflowControls.classList.add('active');
+  stepIndicator.textContent = `Step ${stepIndex + 1}/${currentWorkflow.steps.length}`;
+  btnNextStep.textContent = stepIndex === currentWorkflow.steps.length - 1 ? 'Finish ✓' : 'Next Step ➔';
+
+  showSpeechBubble(`<strong>${step.title}</strong>: ${step.actionText}`, true, 0);
+
+  // Glide companion to button coordinates on screen
+  if (step.targetX && step.targetY) {
+    window.pointlyCompanion.glideTo(step.targetX, step.targetY);
+  }
+
+  // Speak step guidance
+  if (step.spokenText) {
+    await playVoiceResponse(step.spokenText);
+  }
+}
+
+// Execute Task (Guided Workflows, Desktop search, OS controls, or AI)
 async function executeTask(commandText, source = 'text') {
   if (!commandText || !commandText.trim()) return;
 
@@ -345,7 +408,16 @@ async function executeTask(commandText, source = 'text') {
       language: userLang
     });
 
-    // 1. Desktop File Locating
+    // 1. Guided Multi-Step Workflow (e.g. Draft mail in Word)
+    if (result.type === 'guided_workflow' && result.steps) {
+      currentWorkflow = result;
+      currentDraftText = result.draftContent || '';
+      window.pointlyCompanion?.setIgnoreMouseEvents(false);
+      await playWorkflowStep(0);
+      return;
+    }
+
+    // 2. Desktop File Locating
     if (result.type === 'desktop_find' && result.found) {
       showSpeechBubble(result.message, false, 0);
 
@@ -362,7 +434,7 @@ async function executeTask(commandText, source = 'text') {
       return;
     }
 
-    // 2. OS / Window Control Action (minimize, maximize, close, open app)
+    // 3. OS / Window Control Action (minimize, maximize, close, open app)
     if (result.type === 'os_action' && result.found) {
       showSpeechBubble(result.message, false, 0);
 
@@ -379,7 +451,24 @@ async function executeTask(commandText, source = 'text') {
       return;
     }
 
-    // 3. General AI Answer
+    // 4. Browser / Webpage Navigation Action (Chrome, search, scroll, tab)
+    if (result.type === 'browser_action' && result.found) {
+      showSpeechBubble(result.message, false, 0);
+
+      if (result.targetX && result.targetY) {
+        window.pointlyCompanion.glideTo(result.targetX, result.targetY);
+      }
+
+      if (result.spokenText) {
+        await playVoiceResponse(result.spokenText);
+      } else {
+        setBuddyState('idle');
+        setTimeout(() => hideSpeechBubble(), 4000);
+      }
+      return;
+    }
+
+    // 5. General AI Answer
     const resp = result.response || result.message || 'Done.';
     showSpeechBubble(resp, false, 0);
 
@@ -395,6 +484,24 @@ async function executeTask(commandText, source = 'text') {
     showSpeechBubble(`Error: ${err.message}`, false, 3500);
   }
 }
+
+// Next Step Button Click
+btnNextStep.addEventListener('click', (e) => {
+  e.stopPropagation();
+  playWorkflowStep(currentStepIndex + 1);
+});
+
+// Copy Draft Button Click
+btnCopyDraft.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (currentDraftText) {
+    window.pointlyCompanion?.copyToClipboard(currentDraftText);
+    btnCopyDraft.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btnCopyDraft.textContent = '📋 Copy Draft';
+    }, 2000);
+  }
+});
 
 // Buddy Orb Click: Toggle Typing Capsule
 buddyOrb.addEventListener('click', (e) => {
@@ -429,7 +536,7 @@ window.addEventListener('keydown', (event) => {
     event.preventDefault();
     toggleTypingCapsule();
   }
-  // Escape: Close typing capsule or bubble
+  // Escape: Close typing capsule, bubble, or workflow
   if (event.key === 'Escape') {
     closeTypingCapsule();
     hideSpeechBubble();

@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('pointlyCompanion', {
   captureScreen: () => ipcRenderer.invoke('desktop:capture'),
   glideTo: (x, y) => ipcRenderer.send('companion:glide', { x, y }),
   setTypingMode: (active) => ipcRenderer.send('companion:set-typing', active),
+  copyToClipboard: (text) => ipcRenderer.send('clipboard:write', text),
   openFullChat: () => ipcRenderer.send('companion:open-chat'),
   setIgnoreMouseEvents: (ignore, options) => ipcRenderer.send('overlay:set-ignore-mouse', { ignore, options }),
   onVoiceToggle: (callback) => {

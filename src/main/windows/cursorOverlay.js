@@ -12,10 +12,10 @@ function createOverlayWindow() {
   const cursorPosition = screen.getCursorScreenPoint();
 
   const window = new BrowserWindow({
-    width: 320,
-    height: 180,
-    x: Math.min(cursorPosition.x + 12, screenWidth - 330),
-    y: Math.min(cursorPosition.y + 12, screenHeight - 190),
+    width: 400,
+    height: 280,
+    x: Math.min(cursorPosition.x + 14, screenWidth - 410),
+    y: Math.min(cursorPosition.y + 14, screenHeight - 290),
     frame: false,
     transparent: true,
     resizable: false,
@@ -47,8 +47,8 @@ function createOverlayWindow() {
     const currentDisplay = screen.getDisplayNearestPoint(nextPosition);
     const bounds = currentDisplay.workArea;
 
-    const targetX = Math.min(nextPosition.x + 12, bounds.x + bounds.width - 330);
-    const targetY = Math.min(nextPosition.y + 12, bounds.y + bounds.height - 190);
+    const targetX = Math.min(nextPosition.x + 14, bounds.x + bounds.width - 410);
+    const targetY = Math.min(nextPosition.y + 14, bounds.y + bounds.height - 290);
 
     window.setPosition(Math.max(bounds.x + 4, targetX), Math.max(bounds.y + 4, targetY), false);
     lastPosition = nextPosition;
@@ -64,10 +64,19 @@ function createOverlayWindow() {
 }
 
 /**
- * Freeze companion movement when typing bar is open.
+ * Freeze companion movement and focus window when typing bar is open.
  */
 function setTypingMode(active) {
   isTyping = Boolean(active);
+  if (!companionWindow || companionWindow.isDestroyed()) return;
+
+  if (isTyping) {
+    companionWindow.setIgnoreMouseEvents(false);
+    companionWindow.focus();
+  } else {
+    companionWindow.setIgnoreMouseEvents(true, { forward: true });
+    companionWindow.blur();
+  }
 }
 
 /**

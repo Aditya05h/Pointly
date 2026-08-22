@@ -5,8 +5,8 @@
   --dark-red-glow: #b81432;
   --dark-red-deep: #4c0410;
   --ruby-highlight: #ff4d6d;
-  --bubble-bg: rgba(18, 18, 22, 0.92);
-  --bubble-border: rgba(184, 20, 50, 0.4);
+  --bubble-bg: rgba(18, 18, 22, 0.94);
+  --bubble-border: rgba(184, 20, 50, 0.45);
   --text-white: #f8fafc;
   --text-dim: #cbd5e1;
 }
@@ -32,8 +32,8 @@ html, body {
   flex-direction: column;
   gap: 6px;
   padding: 4px;
-  width: 320px;
-  pointer-events: none; /* Let clicks pass through except on interactive elements */
+  width: 340px;
+  pointer-events: none;
 }
 
 /* 26px Dark Red Cursor Buddy */
@@ -156,18 +156,21 @@ html, body {
 .speech-bubble {
   position: relative;
   background: var(--bubble-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--bubble-border);
-  border-radius: 10px;
-  padding: 8px 12px;
-  max-width: 280px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
+  padding: 10px 14px;
+  max-width: 320px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   opacity: 0;
   transform: translateY(-4px) scale(0.96);
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
   z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .speech-bubble.visible {
@@ -177,14 +180,70 @@ html, body {
 }
 
 .bubble-content {
-  font-size: 11.5px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--text-white);
   word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 .bubble-content strong {
   color: #ff758f;
+}
+
+/* Guided Workflow Step Controller */
+.workflow-controls {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.workflow-controls.active {
+  display: flex;
+}
+
+.step-indicator {
+  font: 10px 'DM Mono', monospace;
+  color: #ff758f;
+  background: rgba(255, 77, 109, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  font-weight: 600;
+}
+
+.btn-copy-draft, .btn-next-step {
+  font: 10.5px 'Manrope', sans-serif;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.btn-copy-draft {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-white);
+}
+
+.btn-copy-draft:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.btn-next-step {
+  background: var(--dark-red-main);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(184, 20, 50, 0.4);
+}
+
+.btn-next-step:hover {
+  background: var(--dark-red-glow);
+  transform: scale(1.05);
 }
 
 /* Minimal Expandable Typing Capsule */
@@ -197,8 +256,8 @@ html, body {
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--bubble-border);
   border-radius: 20px;
-  padding: 3px 6px 3px 10px;
-  width: 240px;
+  padding: 3px 6px 3px 12px;
+  width: 270px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   pointer-events: auto;
 }
@@ -212,23 +271,23 @@ html, body {
   border: none;
   background: transparent;
   color: #ffffff;
-  font: 11.5px 'Manrope', sans-serif;
+  font: 12px 'Manrope', sans-serif;
   outline: none;
 }
 
 .capsule-input::placeholder {
   color: #64748b;
-  font-size: 10.5px;
+  font-size: 11px;
 }
 
 .capsule-send {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: none;
   background: var(--dark-red-main);
   color: #ffffff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
   display: grid;
   place-items: center;

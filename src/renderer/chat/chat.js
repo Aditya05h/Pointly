@@ -25,12 +25,12 @@ if (window.pointly?.getSettings) {
     if (settings) {
       if (typeof settings.assistMode === 'boolean') {
         assistMode = settings.assistMode;
-        assistButton.classList.toggle('active', assistMode);
-        assistButton.textContent = assistMode ? '● Assist Mode' : '○ Assist Mode';
+        assistButton?.classList.toggle('active', assistMode);
+        if (assistButton) assistButton.textContent = assistMode ? '● Assist Mode' : '○ Assist Mode';
       }
       if (typeof settings.voiceAutoSpeak === 'boolean') {
         autoSpeak = settings.voiceAutoSpeak;
-        autoTtsToggle.classList.toggle('active', autoSpeak);
+        autoTtsToggle?.classList.toggle('active', autoSpeak);
       }
       if (settings.voiceLanguage && voiceLangSelect) {
         voiceLangSelect.value = settings.voiceLanguage;
@@ -43,6 +43,7 @@ if (window.pointly?.getSettings) {
 }
 
 function updateVoiceStatus(status, text) {
+  if (!voicePanel) return;
   voicePanel.classList.remove('recording', 'speaking');
   if (status === 'recording') voicePanel.classList.add('recording');
   if (status === 'speaking') voicePanel.classList.add('speaking');
@@ -111,7 +112,7 @@ async function playTtsAudio(text, btn = null) {
   updateVoiceStatus('speaking', `Speaking (${speaker})...`);
   if (btn) {
     btn.classList.add('playing');
-    btn.textContent = '⏹ Playing...';
+    btn.textContent = '⏹ Stop';
   }
 
   try {
@@ -137,7 +138,7 @@ async function playTtsAudio(text, btn = null) {
     };
 
     audio.onerror = () => {
-      updateVoiceStatus('idle', 'Audio playback failed');
+      updateVoiceStatus('idle', 'Audio playback error');
       if (btn) {
         btn.classList.remove('playing');
         btn.textContent = '🔊 Speak';
@@ -279,7 +280,7 @@ async function stopRecording() {
     }
 
     updateVoiceStatus('idle', `Transcribed: "${transcript}"`);
-    prompt.value = transcript;
+    if (prompt) prompt.value = transcript;
     await handleSend(transcript, true);
   } catch (error) {
     console.error('Voice processing error:', error);
@@ -300,7 +301,7 @@ async function handleSend(customText = null, fromVoice = false) {
   if (!text) return;
 
   addMessage(text, 'user');
-  prompt.value = '';
+  if (prompt) prompt.value = '';
 
   const pendingMsg = addMessage('Thinking...', 'assistant pending');
   try {
@@ -317,39 +318,57 @@ async function handleSend(customText = null, fromVoice = false) {
   }
 }
 
-form.addEventListener('submit', async (event) => {
+// Bind initial static message TTS button
+document.querySelectorAll('#messages .btn-tts').forEach((btn) => {
+  const parentMsg = btn.closest('.message');
+  const text = parentMsg?.querySelector('.message-content')?.textContent;
+  if (text) {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('playing')) {
+        if (currentAudioPlayer) currentAudioPlayer.pause();
+        btn.classList.remove('playing');
+        btn.textContent = '🔊 Speak';
+        updateVoiceStatus('idle', 'Press Mic or Ctrl+Space to speak');
+      } else {
+        playTtsAudio(text, btn);
+      }
+    });
+  }
+});
+
+form?.addEventListener('submit', async (event) => {
   event.preventDefault();
   await handleSend();
 });
 
-micBtn.addEventListener('click', toggleRecording);
-quickMicBtn.addEventListener('click', toggleRecording);
+micBtn?.addEventListener('click', toggleRecording);
+quickMicBtn?.addEventListener('click', toggleRecording);
 
-autoTtsToggle.addEventListener('click', () => {
+autoTtsToggle?.addEventListener('click', () => {
   autoSpeak = !autoSpeak;
   autoTtsToggle.classList.toggle('active', autoSpeak);
-  window.pointly.saveSettings({ voiceAutoSpeak: autoSpeak });
+  window.pointly?.saveSettings({ voiceAutoSpeak: autoSpeak });
 });
 
 voiceLangSelect?.addEventListener('change', (e) => {
-  window.pointly.saveSettings({ voiceLanguage: e.target.value });
+  window.pointly?.saveSettings({ voiceLanguage: e.target.value });
 });
 
 voiceSpeakerSelect?.addEventListener('change', (e) => {
-  window.pointly.saveSettings({ voiceSpeaker: e.target.value });
+  window.pointly?.saveSettings({ voiceSpeaker: e.target.value });
 });
 
-assistButton.addEventListener('click', () => {
+assistButton?.addEventListener('click', () => {
   assistMode = !assistMode;
   assistButton.classList.toggle('active', assistMode);
   assistButton.textContent = assistMode ? '● Assist Mode' : '○ Assist Mode';
-  window.pointly.saveSettings({ assistMode });
+  window.pointly?.saveSettings({ assistMode });
 });
 
-document.querySelector('#close').addEventListener('click', () => window.pointly.close());
-document.querySelector('#minimize').addEventListener('click', () => window.pointly.minimize());
+document.querySelector('#close')?.addEventListener('click', () => window.pointly?.close());
+document.querySelector('#minimize')?.addEventListener('click', () => window.pointly?.minimize());
 
-prompt.addEventListener('keydown', (event) => {
+prompt?.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     form.requestSubmit();
