@@ -1,11 +1,105 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Pointly</title><link rel="stylesheet" href="chat.css"></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pointly</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
 <body>
   <main class="shell">
-    <header class="titlebar"><div class="brand"><span class="brand-mark">+</span><strong>pointly</strong><small>your quiet co-pilot</small></div><nav><button id="minimize" title="Minimize">−</button><button id="close" title="Close">×</button></nav></header>
-    <section class="intro"><p class="eyebrow">READY WHEN YOU ARE</p><h1>What should we<br><em>figure out?</em></h1><p class="subcopy">Ask a question, describe what is on your screen, or switch on Assist Mode when you want Pointly to take the next step.</p></section>
-    <section id="messages" class="messages" aria-live="polite"><div class="message assistant">Hi. I’m Pointly. How can I make this moment easier?</div></section>
-    <form id="chat-form" class="composer"><textarea id="prompt" rows="2" placeholder="Type a thought..." aria-label="Message Pointly"></textarea><div class="composer-footer"><button type="button" id="assist" class="mode">○ Assist Mode</button><button type="submit" class="send" title="Send message">↗</button></div></form>
-    <footer><span>⌘ ⇧ SPACE</span><span>POINTLY 0.1</span></footer>
-  </main><script src="chat.js"></script>
-</body></html>
+    <header class="titlebar">
+      <div class="brand">
+        <span class="brand-mark">+</span>
+        <strong>pointly</strong>
+        <small>your quiet co-pilot</small>
+      </div>
+      <nav>
+        <button id="minimize" title="Minimize">−</button>
+        <button id="close" title="Close">×</button>
+      </nav>
+    </header>
+
+    <section class="intro">
+      <p class="eyebrow">READY WHEN YOU ARE</p>
+      <h1>What should we<br><em>figure out?</em></h1>
+      <p class="subcopy">Ask a question, speak hands-free, or turn on Assist Mode to let Pointly take the next step.</p>
+    </section>
+
+    <!-- Dedicated Voice Command Panel -->
+    <section class="voice-panel" id="voice-panel" aria-label="Voice Command Center">
+      <div class="voice-header">
+        <div class="voice-title">
+          <span class="voice-dot" id="voice-dot"></span>
+          <strong id="voice-status-title">Voice Command</strong>
+          <kbd class="shortcut-tag">Ctrl + Space</kbd>
+        </div>
+        <div class="voice-controls">
+          <select id="voice-lang-select" class="voice-select" title="Voice Language">
+            <option value="en-IN" selected>English (IN)</option>
+            <option value="hi-IN">हिन्दी (Hindi)</option>
+          </select>
+          <select id="voice-speaker-select" class="voice-select" title="Sarvam Voice Speaker">
+            <option value="shubh" selected>Shubh</option>
+            <option value="anushka">Anushka</option>
+            <option value="aditya">Aditya</option>
+            <option value="priya">Priya</option>
+            <option value="rohan">Rohan</option>
+          </select>
+          <button type="button" id="auto-tts-toggle" class="voice-pill active" title="Auto-speak AI responses">
+            <span class="pill-icon">🔊</span> Auto-Speak
+          </button>
+        </div>
+      </div>
+
+      <div class="voice-body">
+        <div class="voice-waveform" id="voice-waveform">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="voice-status-text" id="voice-status-text">Press Mic or Ctrl+Space to speak</div>
+        <button type="button" id="mic-btn" class="mic-button" title="Start voice recording (Ctrl+Space)" aria-label="Microphone">
+          <svg class="mic-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+          </svg>
+          <span class="recording-pulse"></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Chat Messages -->
+    <section id="messages" class="messages" aria-live="polite">
+      <div class="message assistant" data-msg-id="intro-msg">
+        <div class="message-content">Hi. I’m Pointly. Speak or type your request, and I'll assist you hands-free.</div>
+        <div class="message-actions">
+          <button type="button" class="btn-tts" title="Listen with Sarvam TTS">🔊 Speak</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Composer Form -->
+    <form id="chat-form" class="composer">
+      <textarea id="prompt" rows="2" placeholder="Type a thought, or use Voice Command..." aria-label="Message Pointly"></textarea>
+      <div class="composer-footer">
+        <div class="composer-actions">
+          <button type="button" id="assist" class="mode">○ Assist Mode</button>
+          <button type="button" id="quick-mic" class="quick-mic" title="Voice Command (Ctrl+Space)">🎙️ Speak</button>
+        </div>
+        <button type="submit" class="send" title="Send message">↗</button>
+      </div>
+    </form>
+
+    <footer>
+      <span>⌃ ⌥ SPACE (Launch)</span>
+      <span>⌃ SPACE (Voice)</span>
+      <span>POINTLY · SARVAM AI</span>
+    </footer>
+  </main>
+  <script src="chat.js"></script>
+</body>
+</html>

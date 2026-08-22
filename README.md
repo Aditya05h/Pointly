@@ -1,6 +1,6 @@
 # Pointly
 
-A Windows-first Electron desktop assistant following the requested main/preload/renderer architecture.
+A Windows-first Electron desktop assistant powered by Google Gemini and Sarvam AI.
 
 ## Run
 
@@ -10,4 +10,8 @@ npm run start:server
 npm run dev
 ```
 
-Use `Ctrl+Shift+Space` to open the chat window. Keep provider keys in `server/.env`; never commit them.
+### Shortcuts
+- **`Ctrl + Alt + Space`**: Launch and toggle the Pointly desktop window.
+- **`Ctrl + Space`**: Start / toggle hands-free Voice Command (speech-to-text with Sarvam `saaras:v3` and text-to-speech with `bulbul:v3`).
+
+Keep provider keys in `server/.env`; never commit them.

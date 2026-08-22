@@ -1,5 +1,7 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session } = require('electron');
 const path = require('node:path');
+require('dotenv').config({ path: path.join(__dirname, '../../server/.env') });
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const { createOverlayWindow } = require('./windows/cursorOverlay');
 const { createChatWindow, toggleChatWindow } = require('./windows/chatWindow');
 const { registerGlobalHotkey } = require('./hotkey/globalShortcut');
@@ -14,9 +16,40 @@ function createWindows() {
 }
 
 app.whenReady().then(() => {
+  // Allow media / microphone permissions without blocking prompt
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === 'media' || permission === 'microphone') {
+      return callback(true);
+    }
+    callback(true);
+  });
+
+  session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+    if (permission === 'media' || permission === 'microphone') {
+      return true;
+    }
+    return true;
+  });
+
   createWindows();
   registerIpcHandlers({ getChatWindow: () => chatWindow, getOverlayWindow: () => overlayWindow });
-  registerGlobalHotkey(() => toggleChatWindow(chatWindow));
+
+  const toggleVoice = () => {
+    if (!chatWindow || chatWindow.isDestroyed()) {
+      createWindows();
+    }
+    if (!chatWindow.isVisible()) {
+      chatWindow.show();
+    }
+    chatWindow.focus();
+    chatWindow.webContents.send('voice:toggle');
+  };
+
+  registerGlobalHotkey(
+    () => toggleChatWindow(chatWindow),
+    toggleVoice
+  );
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindows();
   });
