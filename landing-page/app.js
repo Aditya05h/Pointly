@@ -404,12 +404,9 @@
               return;
             }
 
-            if (error.code === 'auth/unauthorized-domain') {
-              var currentHost = window.location.hostname || '127.0.0.1';
-              setAuthError('Domain "' + currentHost + '" is not authorized yet in Firebase Console. Add "' + currentHost + '" under Firebase Authentication -> Settings -> Authorized domains (or open via http://localhost:5500).');
-            } else {
-              setAuthError('Notice: ' + (error.message || 'Firebase Google Sign-In requires active project credentials in firebase-config.js.'));
-            }
+            console.warn('[Pointly Auth Error]', error.code, error.message);
+            // Fallback for development / missing API keys
+            setAuthError('Notice: ' + (error.message || 'Firebase Google Sign-In requires active project credentials in firebase-config.js.'));
           });
       } else {
         // Simulated Google Sign-In Demo Mode (for instant developer preview without live credentials)
