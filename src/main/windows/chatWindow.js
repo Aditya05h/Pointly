@@ -7,7 +7,7 @@ function createChatWindow(onClose) {
     height: 650,
     minWidth: 360,
     minHeight: 520,
-    show: false,
+    show: true,
     frame: false,
     backgroundColor: '#f5f4ef',
     webPreferences: { preload: path.join(__dirname, '../../preload/chatPreload.js') }
@@ -18,7 +18,7 @@ function createChatWindow(onClose) {
     if (!window.isDestroyed()) {
       event.preventDefault();
       window.hide();
-      onClose();
+      if (typeof onClose === 'function') onClose();
     }
   });
   return window;

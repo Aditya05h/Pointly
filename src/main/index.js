@@ -10,7 +10,7 @@ let chatWindow;
 
 function createWindows() {
   overlayWindow = createOverlayWindow();
-  chatWindow = createChatWindow(() => toggleChatWindow(chatWindow));
+  chatWindow = createChatWindow();
 }
 
 app.whenReady().then(() => {
