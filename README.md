@@ -241,7 +241,6 @@ Pointly/
     │   ├── assist/
     │   │   ├── browserController.js  # Chrome automation, navigation & scrolling
     │   │   ├── desktopAnalyzer.js    # Desktop file scanner & screen capturer
-    │   │   ├── inputSimulator.js     # Gated input simulation module
     │   │   ├── osController.js       # Windows OS & Win32 window management
     │   │   └── workflowGuide.js      # Multi-step application workflow generator
     │   ├── hotkey/
@@ -260,23 +259,14 @@ Pointly/
     │   └── overlayPreload.js         # Secure bridge for Cursor Overlay
     │
     └── renderer/                     # Renderer UI Surfaces
-        ├── aircanvas/                # AirCanvas & gesture foundation
-        │   ├── aircanvas.css
-        │   ├── aircanvas.js
-        │   └── dwellClick.js
         ├── chat/                     # Full Chat & Voice Dashboard UI
         │   ├── chat.css              # Glassmorphic dashboard styles
         │   ├── chat.js               # Chat messaging, audio recording & TTS
         │   └── index.html            # Chat interface markup
-        ├── customization/            # Companion customization UI
-        │   ├── customization.js
-        │   └── index.html
         └── overlay/                  # 26px Cursor Companion Overlay
             ├── cursor.css            # Companion animations, beacon, bubble & capsule
             ├── cursor.html           # Overlay DOM layout
-            ├── cursor.js             # Hardware follow loop, physics & audio engine
-            ├── overlay.css
-            └── overlay.js
+            └── cursor.js             # Hardware follow loop, physics & audio engine
 ```
 
 ---

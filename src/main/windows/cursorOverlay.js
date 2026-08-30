@@ -93,13 +93,9 @@ function glideCompanionTo(targetX, targetY, durationMs = 800) {
   companionWindow.webContents.send('companion:glide-to', { targetX, targetY, durationMs });
 }
 
-function getCompanionWindow() {
-  return companionWindow;
-}
-
 module.exports = {
   createOverlayWindow,
   setTypingMode,
-  glideCompanionTo,
-  getCompanionWindow
+  glideCompanionTo
 };
+

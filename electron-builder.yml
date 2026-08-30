@@ -4,7 +4,8 @@ directories:
   output: dist
 files:
   - src/**/*
-  - assets/**/*
+  - server/**/*
   - package.json
 win:
   target: nsis
+
