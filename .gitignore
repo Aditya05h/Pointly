@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+Pointly-Main/node_modules/
+Pointly-Web/node_modules/
+Pointly-Main/.env
+Pointly-Main/server/.env
+Pointly-Main/dist/
