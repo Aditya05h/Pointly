@@ -1,0 +1,25 @@
+{
+  "name": "pointly-web",
+  "version": "1.0.0",
+  "description": "Official landing page and interactive web portal for Pointly Ambient AI Desktop Companion.",
+  "main": "index.html",
+  "scripts": {
+    "dev": "serve -l 3000 .",
+    "start": "serve -l 3000 .",
+    "serve": "serve -l 3000 .",
+    "build": "echo Static site ready"
+  },
+  "keywords": [
+    "pointly",
+    "landing-page",
+    "web-portal",
+    "ai-companion",
+    "desktop-copilot",
+    "ambient-ai"
+  ],
+  "author": "Team XOR",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}
