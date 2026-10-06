@@ -1,80 +1,95 @@
-# Pointly — Project Monorepo
+<p align="center">
+  <img src="docs/assets/pointly-banner.svg" alt="Pointly — screen-aware assistance, right beside your cursor. Voice, vision, and guided actions for Windows." width="100%" />
+</p>
 
-<div align="center">
+<p align="center">
+  <strong>A small companion for the things you do on your desktop.</strong><br />
+  Ask by voice or text, understand what's on screen, and get help with the next step.
+</p>
 
-![Pointly Badge](https://img.shields.io/badge/Pointly-v0.1.0-800a1e?style=for-the-badge&logo=electron&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![Stack](https://img.shields.io/badge/Stack-Electron%20%7C%20Node.js%20%7C%20Gemini%20%7C%20Sarvam-4285F4?style=for-the-badge)
+<p align="center">
+  <a href="#what-pointly-does">Features</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#run-it-locally">Get started</a> ·
+  <a href="#inside-the-repo">Explore the code</a>
+</p>
 
-**The ambient, screen-aware AI desktop companion and web ecosystem for Windows.**
+## What Pointly does
 
-</div>
+| | Feature | In practice |
+| :---: | :--- | :--- |
+| ◉ | **Lives beside your cursor** | A crimson companion follows your pointer, with a click-through overlay outside typing mode. |
+| ◌ | **Voice + text** | Speak a command, type in the floating capsule, or open the full chat dashboard. Sarvam handles transcription and spoken replies. |
+| ◈ | **Screen understanding** | Ask “What do you see?” to send a screen capture to Gemini for visual analysis. |
+| ↗ | **Everyday desktop actions** | Open websites, search in Chrome, control windows, and locate files on your Desktop. |
+| ▤ | **Guided drafting** | Generate a draft, open Word, and follow visual steps to paste and format it. You complete the final steps. |
+| ↺ | **Local history** | Revisit conversations and commands, with screen snapshots saved alongside companion interactions. |
 
----
+**Try:** `Look at my screen` · `Open YouTube` · `Find report.pdf` · `Draft an email to my team`
 
-## 📂 Repository Structure
+## How it works
 
-The Pointly repository is organized into two self-contained projects:
+**Your command → transcription or text → action routing → a reply or guided steps.**
 
-```
-Pointly/
-├── Pointly-Main/             # Electron Desktop Application (Windows Co-pilot)
-│   ├── src/                  # Main, Preload & Renderer Overlay/Chat
-│   ├── server/               # Express API Proxy Server (port 8787)
-│   ├── docs/                 # Product Specifications & PRD
-│   ├── package.json          # Desktop dependencies & scripts
-│   └── README.md             # Desktop App Documentation
-│
-└── Pointly-Web/              # Interactive Showcase & Landing Page Web Portal
-    ├── index.html            # Portal markup & in-browser cursor demo
-    ├── style.css             # Glassmorphic dark design system
-    ├── app.js                # Browser cursor physics & soundboard
-    ├── firebase-config.js    # Firebase Google OAuth setup
-    ├── package.json          # Dev server scripts (port 3000)
-    └── README.md             # Web Portal Documentation
-```
+Electron runs the companion and dashboard. Supported desktop commands go to Windows helpers; questions and screen analysis go to **Gemini**. **Sarvam** provides speech-to-text and text-to-speech, while a local **Express** server handles provider requests. The companion shows responses and points to the next step in supported workflows.
 
----
+## Run it locally
 
-## 🚀 Quick Start Guide
-
-### 1. Running the Desktop Application (`Pointly-Main`)
+You need **Windows 10/11**, **Node.js with npm**, and your own **Gemini** and **Sarvam** API keys. Voice input needs a microphone; Chrome and Word workflows need those applications installed.
 
 ```powershell
-cd Pointly-Main
-
-# Install dependencies
+git clone https://github.com/Aditya05h/Pointly.git
+cd Pointly/Pointly-Main
 npm install
+```
 
-# Start the Express proxy server
-npm run start:server
+Create `Pointly-Main/server/.env` with:
 
-# In another terminal, start the Electron Desktop App
+```dotenv
+GEMINI_API_KEY=your_gemini_api_key
+SARVAM_API_KEY=your_sarvam_api_key
+```
+
+Then, from `Pointly-Main`, run:
+
+```powershell
 npm run dev
 ```
 
-*Shortcuts: `Ctrl + Space` (Voice Push-to-Talk), `Ctrl + T` (Typing Capsule), `Ctrl + Alt + Space` (Full Dashboard).*
+The app starts its local server on port **8787** automatically. Keep your `.env` file private; it is already ignored by Git.
 
-👉 For full desktop architecture, see [Pointly-Main/README.md](file:///d:/Pointly/Pointly-Main/README.md).
+| Shortcut | Action |
+| :--- | :--- |
+| `Ctrl + Space` | Toggle voice input |
+| `Ctrl + T` | Open the typing capsule |
+| `Ctrl + Alt + Space` | Toggle the dashboard |
+| `Ctrl + E` | End the voice session / stop playback |
 
----
+<details>
+<summary><strong>Web showcase &amp; Windows build</strong></summary>
 
-### 2. Running the Showcase Web Portal (`Pointly-Web`)
+The web portal includes a cursor demo, companion states, and workflow previews. From the repository root:
 
 ```powershell
 cd Pointly-Web
-
-# Install local server dependencies
-npm install
-
-# Start the web preview server on http://localhost:3000
 npm run dev
 ```
 
-👉 For web portal architecture and deployment, see [Pointly-Web/README.md](file:///d:/Pointly/Pointly-Web/README.md).
+Open **http://localhost:3000**. Google sign-in requires a configured Firebase project. The website's direct installer download is currently paused; use the desktop source setup above.
+
+To package the desktop app, run `npm run build` inside `Pointly-Main`. Electron Builder writes the Windows build to `Pointly-Main/dist/`.
+
+</details>
+
+## Inside the repo
+
+| Directory | Purpose |
+| :--- | :--- |
+| [Pointly-Main](Pointly-Main/) | Electron app, cursor overlay, chat, Windows helpers, and Express API server. |
+| [Pointly-Web](Pointly-Web/) | HTML/CSS/JavaScript showcase with interactive demos and Firebase authentication. |
+
+**Data handling:** AI features require internet access and send relevant prompts, audio, or screen captures to the configured providers. Interaction history and companion snapshots are stored in the app's local `pointly_memory` folder.
 
 ---
 
-<div align="center">
-  <sub>Pointly Project · Built by Team XOR</sub>
-</div>
+<p align="center"><sub>Pointly · Built by Team XOR · Electron / Node.js / Gemini / Sarvam</sub></p>
