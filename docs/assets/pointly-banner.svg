@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc">
+  <title id="title">Pointly — right beside your cursor</title>
+  <desc id="desc">A crimson cursor companion on a black background. Screen-aware assistance for Windows, with voice, vision, and guided actions.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#070709"/><stop offset="1" stop-color="#190910"/></linearGradient>
+    <radialGradient id="aura"><stop stop-color="#b81432" stop-opacity=".38"/><stop offset="1" stop-color="#800a1e" stop-opacity="0"/></radialGradient>
+    <radialGradient id="orb" cx=".32" cy=".22" r=".85"><stop stop-color="#dc3050"/><stop offset=".5" stop-color="#800a1e"/><stop offset="1" stop-color="#4c0410"/></radialGradient>
+    <linearGradient id="line"><stop stop-color="#ff4d6d"/><stop offset="1" stop-color="#800a1e" stop-opacity="0"/></linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity=".028"/></pattern>
+  </defs>
+  <rect x="1" y="1" width="1198" height="398" rx="22" fill="url(#bg)" stroke="#44202b"/>
+  <rect x="2" y="2" width="1196" height="396" rx="21" fill="url(#grid)"/>
+  <ellipse cx="948" cy="200" rx="285" ry="220" fill="url(#aura)"/>
+  <g font-family="Segoe UI,Arial,sans-serif">
+    <circle cx="58" cy="55" r="4" fill="#ff4d6d"/>
+    <text x="74" y="60" fill="#f4a0af" font-family="Consolas,monospace" font-size="13" letter-spacing="2">YOUR DESKTOP COMPANION</text>
+    <text x="50" y="158" fill="#fff" font-size="83" font-weight="700" letter-spacing="-4">Pointly<tspan fill="#ff4d6d">.</tspan></text>
+    <text x="55" y="204" fill="#f1f5f9" font-size="26" font-weight="500">Right beside your cursor.</text>
+    <text x="55" y="243" fill="#a5a0ac" font-size="18">Screen-aware help, one command away.</text>
+    <path d="M55 272H605" stroke="url(#line)"/>
+    <g font-family="Consolas,monospace" font-size="12" fill="#e4c5cc" letter-spacing="1">
+      <rect x="55" y="303" width="108" height="32" rx="16" fill="#270d17" stroke="#562033"/>
+      <text x="109" y="324" text-anchor="middle">WINDOWS</text>
+      <rect x="173" y="303" width="90" height="32" rx="16" fill="#270d17" stroke="#562033"/>
+      <text x="218" y="324" text-anchor="middle">VOICE</text>
+      <rect x="273" y="303" width="90" height="32" rx="16" fill="#270d17" stroke="#562033"/>
+      <text x="318" y="324" text-anchor="middle">VISION</text>
+      <rect x="373" y="303" width="170" height="32" rx="16" fill="#270d17" stroke="#562033"/>
+      <text x="458" y="324" text-anchor="middle">GUIDED ACTIONS</text>
+    </g>
+    <circle cx="942" cy="188" r="124" fill="none" stroke="#a52947" stroke-opacity=".18"/>
+    <circle cx="942" cy="188" r="101" fill="none" stroke="#ff4d6d" stroke-opacity=".2" stroke-dasharray="3 9"/>
+    <circle cx="942" cy="188" r="74" fill="url(#orb)" stroke="#ff4d6d" stroke-width="2"/>
+    <ellipse cx="916" cy="150" rx="30" ry="13" transform="rotate(-25 916 150)" fill="#ff85a1" opacity=".12"/>
+    <rect x="916" y="173" width="12" height="27" rx="6" fill="#fff1f4"/>
+    <rect x="952" y="173" width="12" height="27" rx="6" fill="#fff1f4"/>
+    <path d="M839 225L843 278L857 263L870 288L883 281L869 256L890 253Z" fill="#f8fafc" stroke="#18121a" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="818" y="308" width="247" height="37" rx="10" fill="#110e14" stroke="#512030"/>
+    <circle cx="837" cy="326" r="3" fill="#ff4d6d"/>
+    <text x="852" y="331" fill="#d2bec7" font-family="Consolas,monospace" font-size="13">Ctrl + Space to speak</text>
+  </g>
+</svg>
