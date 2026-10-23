@@ -467,6 +467,7 @@ code {
   flex-shrink: 0;
 }
 
+/* Legacy CSS orb (kept for fallback) */
 .logo-buddy-orb {
   width: 24px;
   height: 24px;
@@ -491,6 +492,20 @@ code {
   height: 3.5px;
   background: #ffffff;
   border-radius: 1.5px;
+}
+
+/* New inline SVG icon — perfectly circular, no square bg */
+.logo-svg-icon {
+  flex-shrink: 0;
+  border-radius: 50%;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.22s ease;
+  filter: drop-shadow(0 0 6px rgba(184, 20, 50, 0.65));
+}
+
+.nav-logo:hover .logo-svg-icon {
+  transform: scale(1.15) rotate(8deg);
+  filter: drop-shadow(0 0 12px rgba(255, 77, 109, 0.9));
 }
 
 .logo-name {
